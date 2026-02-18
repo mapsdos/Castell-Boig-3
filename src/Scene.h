@@ -17,16 +17,16 @@ class Scene
 
 public:
 	Scene();
-	~Scene();
+	virtual ~Scene();
 
-	void init();
-	void update(int deltaTime);
-	void render();
-
-private:
-	void initShaders();
+	virtual void init();
+	virtual void update(int deltaTime);
+	virtual void render();
 
 private:
+	virtual void initShaders();
+
+protected:
 	TileMap *map;
 	Player *player;
 	ShaderProgram texProgram;
