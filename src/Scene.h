@@ -3,9 +3,9 @@
 
 
 #include <glm/glm.hpp>
+#include "Texture.h"
+#include "Sprite.h"
 #include "ShaderProgram.h"
-#include "TileMap.h"
-#include "Player.h"
 
 
 // Scene contains all the entities of our game.
@@ -23,15 +23,14 @@ public:
 	virtual void update(int deltaTime);
 	virtual void render();
 
-private:
-	virtual void initShaders();
+protected:
+	void initShaders();
+
 
 protected:
-	TileMap *map;
-	Player *player;
-	ShaderProgram texProgram;
 	float currentTime;
 	glm::mat4 projection;
+	ShaderProgram texProgram;
 
 };
 

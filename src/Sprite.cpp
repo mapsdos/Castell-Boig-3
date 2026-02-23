@@ -1,5 +1,4 @@
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include "GraphicsConfig.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "Sprite.h"
 

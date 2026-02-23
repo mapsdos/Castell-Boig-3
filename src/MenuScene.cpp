@@ -13,78 +13,86 @@
 
 MenuScene::MenuScene()
 {
-	map = NULL;
-	player = NULL;
+    for (int i = 0; i < 3; i++) buttonSprites[i] = nullptr;
 }
 
 MenuScene::~MenuScene()
 {
-	texProgram.free();
-	if (map != NULL)
-		delete map;
-	if (player != NULL)
-		delete player;
+    for (int i = 0; i < 3; i++) {
+        if (buttonSprites[i] != nullptr) delete buttonSprites[i];
+    }
 }
 
 
-void MenuScene::init()
-{
-	initShaders();
-	map = TileMap::createTileMap("assets/levels/level01.txt", glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
-	player = new Player();
-	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(), INIT_PLAYER_Y_TILES * map->getTileSize()));
-	player->setTileMap(map);
-	projection = glm::ortho(0.f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.f);
-	currentTime = 0.0f;
+void MenuScene::init() {
+    initShaders(); // Call the base Scene shader setup
+    projection = glm::ortho(0.f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.f);
+
+    setupButtons();
 }
 
-void MenuScene::update(int deltaTime)
-{
-	currentTime += deltaTime;
-	player->update(deltaTime);
+void MenuScene::setupButtons() {
+    // 1. Load the spritesheet containing the button graphics
+    // Ensure this file exists in your assets folder!
+    if (!buttonSheet.loadFromFile("assets/images/menu_buttons.png", TEXTURE_PIXEL_FORMAT_RGBA)) {
+        std::cout << "ERROR: Could not load menu_buttons.png!" << std::endl;
+    }
+
+    // 2. Define layout constants
+    float startX = SCREEN_WIDTH / 2.0f - 64.0f; // Centered (128 width / 2)
+    float startY = 150.0f;
+    float padding = 80.0f;
+
+    for (int i = 0; i < 3; i++) {
+        // We assume the spritesheet has 3 rows (Play, Instructions, Credits)
+        // sizeInSpritesheet = vec2(1.0, 0.33) means one full width, 1/3 height
+        buttonSprites[i] = Sprite::createSprite(glm::vec2(128, 64), glm::vec2(1.0f, 0.33f), &buttonSheet, &texProgram);
+
+        // Position each button vertically
+        buttonSprites[i]->setPosition(glm::vec2(startX, startY + (i * padding)));
+
+        // Select the correct frame from the spritesheet
+        buttonSprites[i]->setNumberAnimations(1);
+        buttonSprites[i]->addKeyframe(0, glm::vec2(0.0f, i * 0.33f));
+        buttonSprites[i]->changeAnimation(0);
+    }
+}
+
+void MenuScene::update(int deltaTime) {
+    if (Game::instance().isMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+    {
+        glm::ivec2 mPos = Game::instance().getMousePos();
+
+        // Button 1: Play (Example coordinates)
+        if (mPos.x >= 250 && mPos.x <= 378 && mPos.y >= 150 && mPos.y <= 214)
+        {
+            Game::instance().changeState(PLAYING);
+        }
+
+        // Button 2: Instructions (Example coordinates)
+        if (mPos.x >= 250 && mPos.x <= 378 && mPos.y >= 150 && mPos.y <= 214)
+        {
+            // Logic to open instructions
+        }
+
+        // Button 3: Credits (Example coordinates)
+        if (mPos.x >= 250 && mPos.x <= 378 && mPos.y >= 150 && mPos.y <= 214)
+        {
+            // Logic to open Credits
+        }
+    }
 }
 
 void MenuScene::render()
 {
-	glm::mat4 modelview;
+    glm::mat4 modelview;
+    texProgram.use();
+    texProgram.setUniformMatrix4f("projection", projection);
+    texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
 
-	texProgram.use();
-	texProgram.setUniformMatrix4f("projection", projection);
-	texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
-	modelview = glm::mat4(1.0f);
-	texProgram.setUniformMatrix4f("modelview", modelview);
-	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f);
-	map->render();
-	player->render();
-}
+    glActiveTexture(GL_TEXTURE0);
 
-void MenuScene::initShaders()
-{
-	Shader vShader, fShader;
-
-	vShader.initFromFile(VERTEX_SHADER, "assets/shaders/texture.vert");
-	if (!vShader.isCompiled())
-	{
-		cout << "Vertex Shader Error" << endl;
-		cout << "" << vShader.log() << endl << endl;
-	}
-	fShader.initFromFile(FRAGMENT_SHADER, "assets/shaders/texture.frag");
-	if (!fShader.isCompiled())
-	{
-		cout << "Fragment Shader Error" << endl;
-		cout << "" << fShader.log() << endl << endl;
-	}
-	texProgram.init();
-	texProgram.addShader(vShader);
-	texProgram.addShader(fShader);
-	texProgram.link();
-	if (!texProgram.isLinked())
-	{
-		cout << "Shader Linking Error" << endl;
-		cout << "" << texProgram.log() << endl << endl;
-	}
-	texProgram.bindFragmentOutput("outColor");
-	vShader.free();
-	fShader.free();
+    for (int i = 0; i < 3; i++) {
+        if (buttonSprites[i] != nullptr) buttonSprites[i]->render();
+    }
 }

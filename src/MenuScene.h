@@ -1,5 +1,13 @@
+#ifndef _MENU_SCENE_INCLUDE
+#define _MENU_SCENE_INCLUDE
+
 #include "Scene.h"
-//#include "TexturedQuad.h" // Assuming you use this for buttons
+
+struct Button {
+    glm::vec2 pos;
+    glm::vec2 size;
+    int textureId;
+};
 
 // The "public Scene" part means MenuScene inherits from Scene
 class MenuScene : public Scene
@@ -12,11 +20,15 @@ public:
     void init() override;
     void update(int deltaTime) override;
     void render() override;
-    void initShaders() override;
 
 private:
-    //TexturedQuad* buttonQuads[3];
-    Texture buttonTexs[3];
-    // Add variables for your buttons here later
+    void setupButtons();
+
+private:
+    Texture buttonSheet;
+    Sprite* buttonSprites[3];
 };
+
+#endif
+
 

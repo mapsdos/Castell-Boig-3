@@ -14,7 +14,9 @@
     <ClInclude Include="src\AnimKeyframes.h" />
     <ClInclude Include="src\CreditsScene.h" />
     <ClInclude Include="src\Game.h" />
+    <ClInclude Include="src\GraphicsConfig.h" />
     <ClInclude Include="src\InstructionsScene.h" />
+    <ClInclude Include="src\LevelScene.h" />
     <ClInclude Include="src\MenuScene.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Scene.h" />
@@ -28,6 +30,7 @@
     <ClCompile Include="src\CreditsScene.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\InstructionsScene.cpp" />
+    <ClCompile Include="src\LevelScene.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuScene.cpp" />
     <ClCompile Include="src\Player.cpp" />

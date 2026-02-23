@@ -1,6 +1,6 @@
 #include <cmath>
 #include <iostream>
-#include <GL/glew.h>
+#include "GraphicsConfig.h"
 #include "Player.h"
 #include "Game.h"
 

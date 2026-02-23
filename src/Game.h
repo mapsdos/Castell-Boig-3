@@ -2,8 +2,10 @@
 #define _GAME_INCLUDE
 
 
-#include <GLFW/glfw3.h>
+#include "GraphicsConfig.h"
 #include "Scene.h"
+#include "MenuScene.h"
+#include "LevelScene.h"
 
 
 #define SCREEN_WIDTH 640
@@ -12,8 +14,6 @@
 enum GameState {
 	MAIN_MENU, PLAYING, INSTRUCTIONS, CREDITS
 };
-
-class MenuScene;
 
 // Game is a singleton (a class with a single instance) that represents our whole application
 
@@ -43,7 +43,11 @@ public:
 	void mousePress(int button);
 	void mouseRelease(int button);
 
+	void changeState(GameState newState);
+
 	bool getKey(int key) const;
+	glm::ivec2 Game::getMousePos() const;
+	bool isMouseButtonPressed(int button) const;
 
 private:
 	GameState state;
@@ -51,14 +55,19 @@ private:
 	MenuScene* menuScene;
 	Scene* instructionsScene;
 	Scene* creditsScene;
-	Scene* level1Scene;
-	Scene* level2Scene;
-	Scene* level3Scene;
-	Scene* level4Scene;
-	Scene* level5Scene;
+	LevelScene* level1Scene;
+	LevelScene* level2Scene;
+	LevelScene* level3Scene;
+	LevelScene* level4Scene;
+	LevelScene* level5Scene;
+
+
 	bool bPlay; // Continue to play game?
 	bool keys[GLFW_KEY_LAST+1]; // Store key states so that 
 							    // we can have access at any time
+
+	glm::ivec2 mousePos;
+	bool mouseButtons[GLFW_MOUSE_BUTTON_LAST + 1];
 
 };
 

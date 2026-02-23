@@ -1,7 +1,5 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "GraphicsConfig.h"
 #include "Game.h"
-#include "MenuScene.h"
 
 Game::Game()
 	: state(MAIN_MENU),
@@ -32,23 +30,13 @@ void Game::init()
 	menuScene->init();
 	currentScene = menuScene;
 
-	level1Scene = new Scene();
+	level1Scene = new LevelScene();
 	level1Scene->init();
 }
 
 bool Game::update(int deltaTime)
 {
-	switch (state) {
-	case MAIN_MENU:
-		menuScene->update(deltaTime);
-		break;
-	case PLAYING:
-		level1Scene->update(deltaTime);
-		break;
-	case INSTRUCTIONS:
-		instructionsScene->update(deltaTime);
-		break;
-	}
+	currentScene->update(deltaTime);
 
 	return bPlay;
 }
@@ -84,26 +72,41 @@ void Game::keyReleased(int key)
 
 void Game::mouseMove(int x, int y)
 {
+	mousePos.x = x;
+	mousePos.y = y;
 }
 
 void Game::mousePress(int button)
 {
-	if (state == MAIN_MENU && button == GLFW_MOUSE_BUTTON_LEFT) {
-		// Pseudo-code: Check if mouseX and mouseY are within your button quad's bounds
-		//if (checkButtonCollision(mouseX, mouseY, playButtonBounds)) {
-			//state = PLAYING;
-		//}
-	}
+	mouseButtons[button] = true;
 }
 
 void Game::mouseRelease(int button)
 {
+	mouseButtons[button] = false;
 }
+
+// Add these getters so scenes can check the mouse status
+glm::ivec2 Game::getMousePos() const { return mousePos; }
+bool Game::isMouseButtonPressed(int button) const { return mouseButtons[button]; }
 
 bool Game::getKey(int key) const
 {
 	return keys[key];
 }
 
+
+void Game::changeState(GameState newState)
+{
+	state = newState;
+	switch (state)
+	{
+	case MAIN_MENU:
+		currentScene = menuScene;
+		break;
+	case PLAYING:
+		currentScene = level1Scene;
+	}
+}
 
 
