@@ -93,6 +93,6 @@ void MenuScene::render()
     glActiveTexture(GL_TEXTURE0);
 
     for (int i = 0; i < 3; i++) {
-        if (buttonSprites[i] != nullptr) buttonSprites[i]->render();
+        if (buttonSprites[i] != nullptr) buttonSprites[i]->render(modelview);
     }
 }

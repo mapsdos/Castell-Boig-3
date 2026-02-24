@@ -49,12 +49,34 @@ void LevelScene::render()
 {
 	glm::mat4 modelview;
 
+	// 1. Set the Zoom (Projection)
+// Instead of the full 640x480, we define a view volume of 320x240
+	float zoomWidth = 320.0f;
+	float zoomHeight = 240.0f;
+	projection = glm::ortho(0.f, zoomWidth, zoomHeight, 0.f);
+
+	// 2. Calculate Camera Position
+	// charX and charY are the pixel coordinates of your character
+	float camX = player->getPosition().x - (zoomWidth / 2.0f);
+	float camY = player->getPosition().y - (zoomHeight / 2.0f);
+
+	// 3. Clamp Camera to Map Edges (Optional but recommended)
+	// Map size in pixels = (28 blocks * blockSize) x (36 blocks * blockSize)
+	float mapWidth = 640.f;// 28.0f * blockSize;
+	float mapHeight = 480.f;//36.0f * blockSize;
+
+	camX = glm::clamp(camX, 0.0f, mapWidth - zoomWidth);
+	camY = glm::clamp(camY, 0.0f, mapHeight - zoomHeight);
+
+	// 4. Apply to Modelview
+	// We move the "world" in the opposite direction of the camera
+	modelview = glm::translate(glm::mat4(1.0f), glm::vec3(-camX, -camY, 0.0f));
+
 	texProgram.use();
 	texProgram.setUniformMatrix4f("projection", projection);
 	texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
-	modelview = glm::mat4(1.0f);
 	texProgram.setUniformMatrix4f("modelview", modelview);
 	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f);
 	map->render();
-	player->render();
+	player->render(modelview);
 }

@@ -53,10 +53,12 @@ void Sprite::update(int deltaTime)
 	}
 }
 
-void Sprite::render() const
+void Sprite::render(const glm::mat4 &modelview) const
 {
-	glm::mat4 modelview = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, 0.f));
-	shaderProgram->setUniformMatrix4f("modelview", modelview);
+	glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, 0.f));
+	glm::mat4 modelViewSprite = modelview * modelMatrix;
+
+	shaderProgram->setUniformMatrix4f("modelview", modelViewSprite);
 	shaderProgram->setUniform2f("texCoordDispl", texCoordDispl.x, texCoordDispl.y);
 	glEnable(GL_TEXTURE_2D);
 	texture->use();
@@ -109,6 +111,11 @@ int Sprite::animation() const
 void Sprite::setPosition(const glm::vec2 &pos)
 {
 	position = pos;
+}
+
+glm::vec2 Sprite::getPosition() const
+{
+	return position;
 }
 
 

@@ -207,32 +207,24 @@ bool TileMap::collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, i
 	return false;
 }
 
+int TileMap::getTileIdAt(const glm::ivec2& pos) const {
+	// Convert pixel coordinates to tile coordinates
+	int x = pos.x / tileSize;
+	int y = pos.y / tileSize;
 
+	// Safety check for map boundaries
+	if (x < 0 || x >= mapSize.x || y < 0 || y >= mapSize.y)
+		return EMPTY;
 
+	return map[y * mapSize.x + x];
+}
 
+glm::ivec2 TileMap::getMapSize() const
+{
+	return mapSize;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+int TileMap::getTileSize() const
+{
+	return tileSize;
+}
