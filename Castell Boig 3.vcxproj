@@ -33,6 +33,7 @@
     <ClCompile Include="src\TileMap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="dlls\freetype6.dll" />
     <None Include="dlls\glew32.dll" />
   </ItemGroup>

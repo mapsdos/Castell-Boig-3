@@ -12,7 +12,7 @@
 
 enum PlayerAnims
 {
-	STAND_LEFT, STAND_RIGHT, MOVE_LEFT, MOVE_RIGHT
+	STAND_LEFT, STAND_RIGHT, MOVE_LEFT, MOVE_RIGHT, ASCEND, DESCEND, ENTER, CLIMB
 };
 
 
@@ -30,27 +30,57 @@ Player::~Player()
 
 void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
+	float widthFrame = 24.0f;
+	float heightFrame = 32.0f;
+	int numFrames = 31;
+	float frameWidthUV = widthFrame / (widthFrame*numFrames);
+	float frameHeightUV = heightFrame / heightFrame;
+
 	bJumping = false;
-	spritesheet.loadFromFile("assets/images/bub.png", TEXTURE_PIXEL_FORMAT_RGBA);
-	sprite = Sprite::createSprite(glm::ivec2(32, 32), glm::vec2(0.25, 0.25), &spritesheet, &shaderProgram);
-	sprite->setNumberAnimations(4);
+	spritesheet.loadFromFile("assets/images/sprites bob.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	sprite = Sprite::createSprite(glm::ivec2(widthFrame, heightFrame), glm::vec2(frameWidthUV, frameHeightUV), &spritesheet, &shaderProgram);
+	sprite->setNumberAnimations(8);
 	
-		sprite->setAnimationSpeed(STAND_LEFT, 8);
-		sprite->addKeyframe(STAND_LEFT, glm::vec2(0.f, 0.f));
+	sprite->setAnimationSpeed(STAND_RIGHT, 8);
+	sprite->addKeyframe(STAND_RIGHT, glm::vec2(0.f, 0.f));
+
+	sprite->setAnimationSpeed(STAND_LEFT, 8);
+	sprite->addKeyframe(STAND_LEFT, glm::vec2(frameWidthUV, 0.f));
 		
-		sprite->setAnimationSpeed(STAND_RIGHT, 8);
-		sprite->addKeyframe(STAND_RIGHT, glm::vec2(0.25f, 0.f));
-		
-		sprite->setAnimationSpeed(MOVE_LEFT, 8);
-		sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f, 0.f));
-		sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f, 0.25f));
-		sprite->addKeyframe(MOVE_LEFT, glm::vec2(0.f, 0.5f));
-		
-		sprite->setAnimationSpeed(MOVE_RIGHT, 8);
-		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.25, 0.f));
-		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.25, 0.25f));
-		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(0.25, 0.5f));
-		
+	sprite->setAnimationSpeed(MOVE_RIGHT, 8);
+	for (int i = 2; i < 10; i++) {
+		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(i * frameWidthUV, 0.f));
+	}
+
+	sprite->setAnimationSpeed(MOVE_LEFT, 8);
+	for (int i = 10; i < 18; i++) {
+		sprite->addKeyframe(MOVE_LEFT, glm::vec2(i * frameWidthUV, 0.f));
+	}
+
+	//bob ascending
+	sprite->setAnimationSpeed(ASCEND, 8);
+	for (int i = 18; i < 22; i++) {
+		sprite->addKeyframe(ASCEND, glm::vec2(i * frameWidthUV, 0.f));
+	}
+	
+	//bob descending
+	sprite->setAnimationSpeed(DESCEND, 8);
+	for (int i = 22; i < 26; i++) {
+		sprite->addKeyframe(DESCEND, glm::vec2(i * frameWidthUV, 0.f));
+	}
+
+	//bob door
+	sprite->setAnimationSpeed(ENTER, 8);
+	for (int i = 26; i < 29; i++) {
+		sprite->addKeyframe(ENTER, glm::vec2(i * frameWidthUV, 0.f));
+	}
+
+	//bob stairs
+	sprite->setAnimationSpeed(CLIMB, 8);
+	for (int i = 29; i < 31; i++) {
+		sprite->addKeyframe(CLIMB, glm::vec2(i * frameWidthUV, 0.f));
+	}
+
 	sprite->changeAnimation(0);
 	tileMapDispl = tileMapPos;
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
@@ -95,11 +125,13 @@ void Player::update(int deltaTime)
 		jumpAngle += JUMP_ANGLE_STEP;
 		if(jumpAngle == 180)
 		{
+			sprite->changeAnimation(ASCEND);
 			bJumping = false;
 			posPlayer.y = startY;
 		}
 		else
 		{
+			sprite->changeAnimation(DESCEND);
 			posPlayer.y = int(startY - 96 * sin(3.14159f * jumpAngle / 180.f));
 			if(jumpAngle > 90)
 				bJumping = !map->collisionMoveDown(posPlayer, glm::ivec2(32, 32), &posPlayer.y);

@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Sprite.h"
 
-
+//quadSize és es tamany en píxels de sa imatge, sizeInSpritesheet és com divideixes sa imatge
 Sprite *Sprite::createSprite(const glm::vec2 &quadSize, const glm::vec2 &sizeInSpritesheet, Texture *spritesheet, ShaderProgram *program)
 {
 	Sprite *quad = new Sprite(quadSize, sizeInSpritesheet, spritesheet, program);
