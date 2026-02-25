@@ -1,3 +1,4 @@
+#include "GraphicsConfig.h"
 #include <SOIL.h>
 #include "Texture.h"
 

@@ -6,6 +6,15 @@
 #include "Texture.h"
 #include "ShaderProgram.h"
 
+enum TileType {
+	EMPTY = 0,
+	WALL = 1,
+	STAIRS = 2,
+	VINES = 3,
+	DOOR = 4,
+	KEY = 5
+};
+
 
 // Class Tilemap is capable of loading a tile map from a text file in a very
 // simple format (see level01.txt for an example). With this information
@@ -28,11 +37,15 @@ public:
 	void render() const;
 	void free();
 	
-	int getTileSize() const { return tileSize; }
+	int getTileSize() const;
 
 	bool collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const;
+
+	int getTileIdAt(const glm::ivec2& pos) const;
+
+	glm::ivec2 getMapSize() const;
 	
 private:
 	bool loadLevel(const string &
@@ -51,7 +64,7 @@ private:
 	Texture tilesheet;
 	glm::vec2 tileTexSize;
 	int *map;
-
+	TileType tileType;
 };
 
 

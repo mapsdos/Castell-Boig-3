@@ -12,7 +12,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimKeyframes.h" />
+    <ClInclude Include="src\CreditsScene.h" />
+    <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Game.h" />
+    <ClInclude Include="src\GraphicsConfig.h" />
+    <ClInclude Include="src\InstructionsScene.h" />
+    <ClInclude Include="src\Key.h" />
+    <ClInclude Include="src\LevelScene.h" />
+    <ClInclude Include="src\MenuScene.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Scene.h" />
     <ClInclude Include="src\Shader.h" />
@@ -22,8 +29,14 @@
     <ClInclude Include="src\TileMap.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\CreditsScene.cpp" />
+    <ClCompile Include="src\Entity.cpp" />
+    <ClCompile Include="src\Key.cpp" />
     <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\InstructionsScene.cpp" />
+    <ClCompile Include="src\LevelScene.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MenuScene.cpp" />
     <ClCompile Include="src\Player.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Shader.cpp" />
@@ -47,7 +60,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -83,6 +96,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)libs\Simple OpenGL Image Library\src;$(ProjectDir)libs\glew-1.13.0\include;$(ProjectDir)libs\glm;$(ProjectDir)libs\glfw-3.3.8\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
