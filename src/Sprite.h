@@ -25,7 +25,7 @@ public:
 	static Sprite *createSprite(const glm::vec2 &quadSize, const glm::vec2 &sizeInSpritesheet, Texture *spritesheet, ShaderProgram *program);
 
 	void update(int deltaTime);
-	void render() const;
+	void render(const glm::mat4 &modelview) const;
 	void free();
 
 	void setNumberAnimations(int nAnimations);
@@ -35,6 +35,7 @@ public:
 	int animation() const;
 	
 	void setPosition(const glm::vec2 &pos);
+	glm::vec2 getPosition() const;
 
 private:
 	Texture *texture;

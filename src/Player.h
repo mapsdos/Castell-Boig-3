@@ -19,7 +19,8 @@ public:
 public:
 	void init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram);
 	void update(int deltaTime);
-	void render();
+	void render(const glm::mat4 &modelview);
+	
 	void setTileMap(TileMap *tileMap);
 	void setPosition(const glm::vec2 &pos);
 
@@ -29,6 +30,10 @@ public:
 	void heal(int amount);
 	int getLives() { return lives; }
 	void updateHeartPositions();
+	void receiveDamage(int amount);
+	
+
+	glm::ivec2 getPosition() const;
 	
 private:
 	bool bJumping;
