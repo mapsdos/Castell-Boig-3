@@ -26,10 +26,71 @@ Player::~Player()
 {
 	if (sprite != NULL)
 		delete sprite;
+
+	for (int i = 0; i < 3; i++) {
+		if (heartSprites[i] != NULL)
+			delete heartSprites[i];
+	}
+}
+
+void Player::setLives(int lives) {
+	if (lives >= 0 && lives <= 3) this->lives = lives;
+	else if (lives == 0) //Implementar mort
+	updateHeartPositions();
+}
+
+void Player::updateHeartPositions() {
+	for (int i = 0; i < 3; i++) {
+		if (i < lives) {
+			heartSprites[i]->changeAnimation(0); // Cor ple
+		} 
+		else {
+			heartSprites[i]->changeAnimation(1); // Cor buit
+		}
+		glm::vec2 heartPos = glm::vec2(10 + i * 15, 10);
+		heartSprites[i]->setPosition(heartPos);
+	}
+}
+
+void Player::receiveDamage(int amount)
+{
+	setLives(lives - amount);
+}
+
+void Player::heal(int amount)
+{
+	setLives(lives + amount);
 }
 
 void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 {
+	lives = 3;
+	heartTexture.loadFromFile("assets/images/hearts.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	float heartWidthUV = 12.0f / 24.0f;
+	float heartHeightUV = 12.0f / 12.0f;
+
+	for (int i = 0; i < 3; i++) {
+		heartSprites[i] = Sprite::createSprite(
+			glm::ivec2(12, 12),                       
+			glm::vec2(heartWidthUV, heartHeightUV),   
+			&heartTexture,
+			&shaderProgram
+		);
+
+		heartSprites[i]->setNumberAnimations(2);
+
+		//Cor ple
+		heartSprites[i]->setAnimationSpeed(0, 1);
+		heartSprites[i]->addKeyframe(0, glm::vec2(0.f, 0.f));
+
+		//Cor buit
+		heartSprites[i]->setAnimationSpeed(1, 1);
+		heartSprites[i]->addKeyframe(1, glm::vec2(heartWidthUV, 0.f));  // (0.5, 0)
+
+		//Posar com a default es cors plens
+		heartSprites[i]->changeAnimation(0);
+	}
+
 	float widthFrame = 24.0f;
 	float heightFrame = 32.0f;
 	int numFrames = 31;
@@ -84,12 +145,16 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 	sprite->changeAnimation(0);
 	tileMapDispl = tileMapPos;
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
-	
 }
 
 void Player::update(int deltaTime)
 {
 	sprite->update(deltaTime);
+
+	for (int i = 0; i < 3; i++) {
+		heartSprites[i]->update(deltaTime);
+	}
+
 	if(Game::instance().getKey(GLFW_KEY_LEFT))
 	{
 		if(sprite->animation() != MOVE_LEFT)
@@ -150,13 +215,17 @@ void Player::update(int deltaTime)
 			}
 		}
 	}
-	
+	updateHeartPositions();
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
 }
 
 void Player::render()
 {
 	sprite->render();
+
+	for (int i = 0; i < 3; i++) {
+		heartSprites[i]->render();
+	}
 }
 
 void Player::setTileMap(TileMap *tileMap)
@@ -169,7 +238,3 @@ void Player::setPosition(const glm::vec2 &pos)
 	posPlayer = pos;
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
 }
-
-
-
-

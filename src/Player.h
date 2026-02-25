@@ -20,9 +20,15 @@ public:
 	void init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram);
 	void update(int deltaTime);
 	void render();
-	
 	void setTileMap(TileMap *tileMap);
 	void setPosition(const glm::vec2 &pos);
+
+	void setLives(int lives);
+	void receive
+	(int amount);
+	void heal(int amount);
+	int getLives() { return lives; }
+	void updateHeartPositions();
 	
 private:
 	bool bJumping;
@@ -34,6 +40,9 @@ private:
 	Sprite* spriteStand;
 	TileMap *map;
 
+	int lives;
+	Texture heartTexture;
+	Sprite* heartSprites[3];
 };
 
 
