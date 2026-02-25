@@ -43,12 +43,17 @@ void Sprite::update(int deltaTime)
 {
 	if(currentAnimation >= 0)
 	{
+		if (animations[currentAnimation].millisecsPerKeyframe <= 0.0f) {
+			currentKeyframe = 0;
+			texCoordDispl = animations[currentAnimation].keyframeDispl[0];
+			return;
+		}
 		timeAnimation += deltaTime;
 		while(timeAnimation > animations[currentAnimation].millisecsPerKeyframe)
 		{
 			timeAnimation -= animations[currentAnimation].millisecsPerKeyframe;
 			currentKeyframe = (currentKeyframe + 1) % animations[currentAnimation].keyframeDispl.size();
-		}
+		}	
 		texCoordDispl = animations[currentAnimation].keyframeDispl[currentKeyframe];
 	}
 }

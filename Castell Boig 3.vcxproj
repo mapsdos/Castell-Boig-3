@@ -13,9 +13,11 @@
   <ItemGroup>
     <ClInclude Include="src\AnimKeyframes.h" />
     <ClInclude Include="src\CreditsScene.h" />
+    <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GraphicsConfig.h" />
     <ClInclude Include="src\InstructionsScene.h" />
+    <ClInclude Include="src\Key.h" />
     <ClInclude Include="src\LevelScene.h" />
     <ClInclude Include="src\MenuScene.h" />
     <ClInclude Include="src\Player.h" />
@@ -28,6 +30,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CreditsScene.cpp" />
+    <ClCompile Include="src\Entity.cpp" />
+    <ClCompile Include="src\Key.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\InstructionsScene.cpp" />
     <ClCompile Include="src\LevelScene.cpp" />
@@ -91,6 +95,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)libs\Simple OpenGL Image Library\src;$(ProjectDir)libs\glew-1.13.0\include;$(ProjectDir)libs\glm;$(ProjectDir)libs\glfw-3.3.8\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

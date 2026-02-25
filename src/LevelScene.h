@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "TileMap.h"
 #include "Player.h"
+#include "Entity.h"
 
 class LevelScene : public Scene
 {
@@ -19,6 +20,7 @@ public:
 private:
 	TileMap* map;
 	Player* player;
+	std::vector<Entity*> items;
 
 };
 

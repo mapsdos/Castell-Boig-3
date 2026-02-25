@@ -2,6 +2,7 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include "LevelScene.h"
+#include "Key.h"
 #include "Game.h"
 
 #define SCREEN_X 32
@@ -31,6 +32,30 @@ void LevelScene::init()
 {
 	initShaders();
 	map = TileMap::createTileMap("assets/levels/level01.txt", glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
+
+	glm::ivec2 size = map->getMapSize();
+	for (int j = 0; j < size.y; j++) {
+		for (int i = 0; i < size.x; i++) {
+			// Check the map data for the key ID (2)
+			if (map->getTileIdAt(glm::ivec2(i * map->getTileSize(), j * map->getTileSize())) == 5) {
+				Key* newKey = new Key();
+
+				// Calculate pixel position: (Column * TileSize, Row * TileSize)
+				// Add SCREEN_X/Y if your map has an offset
+				// In LevelScene.cpp init()
+				float x = SCREEN_X + (i * map->getTileSize());
+				// Subtract 16 (or the difference between sprite height and tile height) 
+				// to pull the key "up" out of the floor
+				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
+
+				newKey->init(glm::vec2(x, y), texProgram);
+
+				newKey->init(glm::vec2(x, y), texProgram);
+				items.push_back(newKey);
+			}
+		}
+	}
+
 	player = new Player();
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
 	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(), INIT_PLAYER_Y_TILES * map->getTileSize()));
@@ -43,6 +68,33 @@ void LevelScene::update(int deltaTime)
 {
 	currentTime += deltaTime;
 	player->update(deltaTime);
+
+	// Ensure player bounds account for the SCREEN_X/Y offset 
+	// if getPosition() only returns the relative world tile position.
+	float playerWorldX = player->getPosition().x + SCREEN_X;
+	float playerWorldY = player->getPosition().y + SCREEN_Y;
+
+	float pL = playerWorldX + 4;
+	float pR = playerWorldX + 28;
+	float pT = playerWorldY + 4;
+	float pB = playerWorldY + 28;
+
+	for (auto it = items.begin(); it != items.end(); ) {
+		// The Key iL is already (SCREEN_X + i * tileSize)
+		float iL = (*it)->getPosition().x;
+		float iR = iL + 32;
+		float iT = (*it)->getPosition().y;
+		float iB = iT + 32;
+
+		if (pL < iR && pR > iL && pT < iB && pB > iT) {
+			delete* it;
+			it = items.erase(it);
+		}
+		else {
+			(*it)->update(deltaTime);
+			++it;
+		}
+	}
 }
 
 void LevelScene::render()
@@ -79,4 +131,7 @@ void LevelScene::render()
 	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f);
 	map->render();
 	player->render(modelview);
+	for (unsigned int i = 0; i < items.size(); i++) {
+		items[i]->render(modelview);
+	}
 }

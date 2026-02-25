@@ -60,6 +60,54 @@ void Player::init(const glm::ivec2 &tileMapPos, ShaderProgram &shaderProgram)
 void Player::update(int deltaTime)
 {
 	sprite->update(deltaTime);
+	// Check for climbables at player center
+	int tileId = map->getTileIdAt(posPlayer + glm::ivec2(16, 16));
+	bool onVine = (tileId == 3); // 3 = VINES
+
+	if (onVine) {
+		bJumping = false; // Cancel any active jump
+		if (Game::instance().getKey(GLFW_KEY_UP)) {
+			int tileAbove = map->getTileIdAt(posPlayer + glm::ivec2(16, 8));
+			if (tileAbove == 3) {
+				posPlayer.y -= 2;
+			}
+		}
+		else if (Game::instance().getKey(GLFW_KEY_DOWN)) {
+			posPlayer.y += 2;
+			map->collisionMoveDown(posPlayer, glm::ivec2(32, 32), &posPlayer.y);
+		}
+	}
+	else {
+		if (bJumping)
+		{
+			jumpAngle += JUMP_ANGLE_STEP;
+			if (jumpAngle == 180)
+			{
+				bJumping = false;
+				posPlayer.y = startY;
+			}
+			else
+			{
+				posPlayer.y = int(startY - 96 * sin(3.14159f * jumpAngle / 180.f));
+				if (jumpAngle > 90)
+					bJumping = !map->collisionMoveDown(posPlayer, glm::ivec2(32, 32), &posPlayer.y);
+			}
+		}
+		else
+		{
+			posPlayer.y += FALL_STEP;
+			if (map->collisionMoveDown(posPlayer, glm::ivec2(32, 32), &posPlayer.y))
+			{
+				if (Game::instance().getKey(GLFW_KEY_UP))
+				{
+					bJumping = true;
+					jumpAngle = 0;
+					startY = posPlayer.y;
+				}
+			}
+		}
+	}
+
 	if(Game::instance().getKey(GLFW_KEY_LEFT))
 	{
 		if(sprite->animation() != MOVE_LEFT)
@@ -88,35 +136,6 @@ void Player::update(int deltaTime)
 			sprite->changeAnimation(STAND_LEFT);
 		else if(sprite->animation() == MOVE_RIGHT)
 			sprite->changeAnimation(STAND_RIGHT);
-	}
-	
-	if(bJumping)
-	{
-		jumpAngle += JUMP_ANGLE_STEP;
-		if(jumpAngle == 180)
-		{
-			bJumping = false;
-			posPlayer.y = startY;
-		}
-		else
-		{
-			posPlayer.y = int(startY - 96 * sin(3.14159f * jumpAngle / 180.f));
-			if(jumpAngle > 90)
-				bJumping = !map->collisionMoveDown(posPlayer, glm::ivec2(32, 32), &posPlayer.y);
-		}
-	}
-	else
-	{
-		posPlayer.y += FALL_STEP;
-		if(map->collisionMoveDown(posPlayer, glm::ivec2(32, 32), &posPlayer.y))
-		{
-			if(Game::instance().getKey(GLFW_KEY_UP))
-			{
-				bJumping = true;
-				jumpAngle = 0;
-				startY = posPlayer.y;
-			}
-		}
 	}
 	
 	sprite->setPosition(glm::vec2(float(tileMapDispl.x + posPlayer.x), float(tileMapDispl.y + posPlayer.y)));
