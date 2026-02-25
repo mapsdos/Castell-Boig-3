@@ -6,7 +6,7 @@
 .vscode/
 .idea/
 
-bin/
+bin/*
 Debug/
 Release/
 x64/
