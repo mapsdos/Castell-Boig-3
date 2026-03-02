@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="src\AnimKeyframes.h" />
     <ClInclude Include="src\CreditsScene.h" />
+    <ClInclude Include="src\Door.h" />
     <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GraphicsConfig.h" />
@@ -25,11 +26,13 @@
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\ShaderProgram.h" />
     <ClInclude Include="src\Sprite.h" />
+    <ClInclude Include="src\Stairs.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\TileMap.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CreditsScene.cpp" />
+    <ClCompile Include="src\Door.cpp" />
     <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\Key.cpp" />
     <ClCompile Include="src\Game.cpp" />
@@ -42,6 +45,7 @@
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
     <ClCompile Include="src\Sprite.cpp" />
+    <ClCompile Include="src\Stairs.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\TileMap.cpp" />
   </ItemGroup>
@@ -60,7 +64,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

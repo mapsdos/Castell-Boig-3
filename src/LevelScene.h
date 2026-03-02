@@ -5,6 +5,7 @@
 #include "TileMap.h"
 #include "Player.h"
 #include "Entity.h"
+#include "Stairs.h"
 
 class LevelScene : public Scene
 {
@@ -21,6 +22,9 @@ private:
 	TileMap* map;
 	Player* player;
 	std::vector<Entity*> items;
+	std::vector<Stairs*> stairs;
+	float stairCooldown = 0.0f;
+	const float STAIR_DELAY = 100.0f;
 
 };
 

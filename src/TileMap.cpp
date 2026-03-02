@@ -113,7 +113,7 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 		for(int i=0; i<mapSize.x; i++)
 		{
 			tile = map[j * mapSize.x + i];
-			if(tile != 0 && tile != 5)
+			if(tile != 0 && tile != 2 && tile != 5)
 			{
 				// Non-empty tile
 				nTiles++;
@@ -136,6 +136,10 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 				vertices.push_back(texCoordTile[1].x); vertices.push_back(texCoordTile[1].y);
 				vertices.push_back(posTile.x); vertices.push_back(posTile.y + blockSize);
 				vertices.push_back(texCoordTile[0].x); vertices.push_back(texCoordTile[1].y);
+			}
+			else if (tile == 2)
+			{
+				positions.push_back(glm::vec2(i, j));
 			}
 		}
 	}
@@ -224,4 +228,9 @@ glm::ivec2 TileMap::getMapSize() const
 int TileMap::getTileSize() const
 {
 	return tileSize;
+}
+
+vector<glm::vec2> TileMap::getPositionsOfStairs() const
+{
+	return positions;
 }

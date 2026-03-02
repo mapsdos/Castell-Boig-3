@@ -49,11 +49,33 @@ void LevelScene::init()
 				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 
 				newKey->init(glm::vec2(x, y), texProgram);
-
-				newKey->init(glm::vec2(x, y), texProgram);
 				items.push_back(newKey);
 			}
 		}
+	}
+
+	// Get the pair of positions from the map
+	const vector<glm::vec2>& stairPos = map->getPositionsOfStairs();
+
+	for (int i = 0; i < stairPos.size(); i += 2) {
+		// 1. Convert tile coordinates to pixel coordinates
+		float x1 = SCREEN_X + (stairPos[i].x * map->getTileSize());
+		float y1 = SCREEN_Y + (stairPos[i].y * map->getTileSize()) - 15;
+
+		float x2 = SCREEN_X + (stairPos[i + 1].x * map->getTileSize());
+		float y2 = SCREEN_Y + (stairPos[i + 1].y * map->getTileSize()) - 15;
+
+		// 2. Create the Entrance Stair
+		Stairs* stairA = new Stairs();
+		stairA->init(glm::vec2(x1, y1), texProgram);
+		stairA->setDestination(glm::vec2(x2, y2));
+		stairs.push_back(stairA);
+
+		// 3. Create the Exit Stair (so you can go back)
+		Stairs* stairB = new Stairs();
+		stairB->init(glm::vec2(x2, y2), texProgram);
+		stairB->setDestination(glm::vec2(x1, y1));
+		stairs.push_back(stairB);
 	}
 
 	player = new Player();
@@ -67,20 +89,49 @@ void LevelScene::init()
 void LevelScene::update(int deltaTime)
 {
 	currentTime += deltaTime;
-	player->update(deltaTime);
 
-	// Ensure player bounds account for the SCREEN_X/Y offset 
-	// if getPosition() only returns the relative world tile position.
+	if (stairCooldown > 0)
+	{
+		stairCooldown -= deltaTime;
+	}
+
+	// 1. Calculate player bounds for interaction
 	float playerWorldX = player->getPosition().x + SCREEN_X;
 	float playerWorldY = player->getPosition().y + SCREEN_Y;
-
 	float pL = playerWorldX + 4;
 	float pR = playerWorldX + 28;
 	float pT = playerWorldY + 4;
 	float pB = playerWorldY + 28;
 
+	// 2. Check Stairs BEFORE Player Update
+	for (Stairs* s : stairs) {
+		float sL = s->getPosition().x;
+		float sR = sL + 32;
+		float sT = s->getPosition().y;
+		float sB = sT + 32;
+
+		if (pL < sR && pR > sL && pT < sB && pB > sT) {
+			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0) {
+				glm::vec2 dest = s->getDestination();
+				// Offset y slightly so the player lands on top of the tile, not inside it
+				player->setPosition(dest - glm::vec2(SCREEN_X, SCREEN_Y + 1));
+				stairCooldown = STAIR_DELAY;
+				return; // Skip the rest of the update to prevent jumping this frame
+			}
+		}
+	}
+
+	// 3. Normal Player and Item Updates
+	if (stairCooldown <= 0)
+	{
+		player->update(deltaTime,false);
+	}
+	else
+	{
+		player->update(deltaTime, true);
+	}
+
 	for (auto it = items.begin(); it != items.end(); ) {
-		// The Key iL is already (SCREEN_X + i * tileSize)
 		float iL = (*it)->getPosition().x;
 		float iR = iL + 32;
 		float iT = (*it)->getPosition().y;
@@ -132,6 +183,10 @@ void LevelScene::render()
 	map->render();
 	for (unsigned int i = 0; i < items.size(); i++) {
 		items[i]->render(modelview);
+	}
+	for (unsigned int i = 0; i < stairs.size(); i++)
+	{
+		stairs[i]->render(modelview);
 	}
 	player->render(modelview);
 }

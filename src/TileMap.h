@@ -46,6 +46,8 @@ public:
 	int getTileIdAt(const glm::ivec2& pos) const;
 
 	glm::ivec2 getMapSize() const;
+
+	vector<glm::vec2> getPositionsOfStairs() const;
 	
 private:
 	bool loadLevel(const string &
@@ -65,6 +67,7 @@ private:
 	glm::vec2 tileTexSize;
 	int *map;
 	TileType tileType;
+	vector<glm::vec2> positions;
 };
 
 
