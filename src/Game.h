@@ -44,6 +44,7 @@ public:
 	void mouseRelease(int button);
 
 	void changeState(GameState newState);
+	void setScene(Scene* newScene);
 
 	bool getKey(int key) const;
 	glm::ivec2 Game::getMousePos() const;

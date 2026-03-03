@@ -76,6 +76,20 @@ bool TileMap::loadLevel(const string &levelFile)
 	tilesheet.setMagFilter(GL_NEAREST);
 	getline(fin, line);
 	sstream.str(line);
+	int numDoors;
+	sstream >> numDoors;
+	// Load the room file. Store in a vector.
+	for (int i = 0; i < numDoors; i++)
+	{
+		getline(fin, line);
+		sstream.str(line);
+		string s;
+		sstream >> s;
+		roomFiles.push_back(s);
+	}
+
+	getline(fin, line);
+	sstream.str(line);
 	sstream >> tilesheetSize.x >> tilesheetSize.y;
 	tileTexSize = glm::vec2(1.f / tilesheetSize.x, 1.f / tilesheetSize.y);
 	
@@ -113,7 +127,7 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 		for(int i=0; i<mapSize.x; i++)
 		{
 			tile = map[j * mapSize.x + i];
-			if(tile != 0 && tile != 2 && tile != 5)
+			if(tile != 0 && tile != 2 && tile != 4 && tile != 5)
 			{
 				// Non-empty tile
 				nTiles++;
@@ -233,4 +247,9 @@ int TileMap::getTileSize() const
 vector<glm::vec2> TileMap::getPositionsOfStairs() const
 {
 	return positions;
+}
+
+vector<string> TileMap::getRoomFiles() const
+{
+	return roomFiles;
 }

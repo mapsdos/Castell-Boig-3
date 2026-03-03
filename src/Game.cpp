@@ -31,7 +31,7 @@ void Game::init()
 	currentScene = menuScene;
 
 	level1Scene = new LevelScene();
-	level1Scene->init();
+	level1Scene->init("assets/levels/level01.txt");
 }
 
 bool Game::update(int deltaTime)
@@ -93,6 +93,12 @@ bool Game::isMouseButtonPressed(int button) const { return mouseButtons[button];
 bool Game::getKey(int key) const
 {
 	return keys[key];
+}
+
+void Game::setScene(Scene* newScene) {
+	if (newScene != NULL) {
+		currentScene = newScene;
+	}
 }
 
 

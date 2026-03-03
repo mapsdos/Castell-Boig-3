@@ -48,12 +48,11 @@ public:
 	glm::ivec2 getMapSize() const;
 
 	vector<glm::vec2> getPositionsOfStairs() const;
+
+	vector<string> getRoomFiles() const;
 	
 private:
-	bool loadLevel(const string &
-	
-	
-	);
+	bool loadLevel(const string &);
 	void prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program);
 
 private:
@@ -68,6 +67,7 @@ private:
 	int *map;
 	TileType tileType;
 	vector<glm::vec2> positions;
+	vector<string> roomFiles;
 };
 
 
