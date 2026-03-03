@@ -110,7 +110,7 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 	sprite->setAnimationSpeed(STAND_LEFT, 8);
 	sprite->addKeyframe(STAND_LEFT, glm::vec2(frameWidthUV, 0.f));
 
-	sprite->setAnimationSpeed(MOVE_RIGHT, 15);
+	sprite->setAnimationSpeed(MOVE_RIGHT, 8);
 	for (int i = 2; i < 10; i++)
 		sprite->addKeyframe(MOVE_RIGHT, glm::vec2(i * frameWidthUV, 0.f));
 
@@ -142,158 +142,134 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 	sprite->setPosition(glm::vec2(tileMapDispl + posPlayer));
 }
 
-void Player::update(int deltaTime)
-{
+void Player::update(int deltaTime, bool wait) {
 	sprite->update(deltaTime);
-
-	for (int i = 0; i < 3; i++)
-		heartSprites[i]->update(deltaTime);
-
-	int tileId = map->getTileIdAt(posPlayer + glm::ivec2(16, 30));
-	bool onVine = (tileId == 3);
-
-	if (onVine)
+	for (int i = 0; i < 3; i++) heartSprites[i]->update(deltaTime);
+	if (!wait)
 	{
-		bJumping = false;
-		bool movingVertically = false;
+		int tileId = map->getTileIdAt(posPlayer + glm::ivec2(12, 30));
 
-		if (Game::instance().getKey(GLFW_KEY_UP)) {
-			int tileAbove = map->getTileIdAt(posPlayer + glm::ivec2(16, 8));
-			if (tileAbove == 3) {
-				posPlayer.y -= 2;
-				movingVertically = true;
-			}
-		}
-		else if (Game::instance().getKey(GLFW_KEY_DOWN)) {
-			posPlayer.y += 2;
-			map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y);
-			movingVertically = true;
-		}
-
-		if (movingVertically) {
-			if (sprite->animation() != CLIMB)
-				sprite->changeAnimation(CLIMB);
+		if (tileId == 3) {
+			handleClimbing();
 		}
 		else {
-			if (sprite->animation() != HANG)
-				sprite->changeAnimation(HANG);
-		}
-
-		if (Game::instance().getKey(GLFW_KEY_LEFT)) {
-			posPlayer.x -= 1;
-			if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32)))
-				posPlayer.x += 1;
-		}
-		else if (Game::instance().getKey(GLFW_KEY_RIGHT)) {
-			posPlayer.x += 1;
-			if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32)))
-				posPlayer.x -= 1;
+			bool moving = handleHorizontalMovement();
+			if (bJumping) updateJumpLogic(moving);
+			else updateGravityLogic(moving);
 		}
 	}
-	else
-	{
-		bool moving = false;
-
-		if (Game::instance().getKey(GLFW_KEY_LEFT))
-		{
-			moving = true;
-			if (sprite->animation() != MOVE_LEFT)
-				sprite->changeAnimation(MOVE_LEFT);
-			posPlayer.x -= 2;
-			if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32)))
-			{
-				posPlayer.x += 2;
-				if (!bJumping && sprite->animation() != DESCEND)
-					sprite->changeAnimation(STAND_LEFT);
-			}
-		}
-		else if (Game::instance().getKey(GLFW_KEY_RIGHT))
-		{
-			moving = true;
-			if (sprite->animation() != MOVE_RIGHT)
-				sprite->changeAnimation(MOVE_RIGHT);
-			posPlayer.x += 2;
-			if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32)))
-			{
-				posPlayer.x -= 2;
-				if (!bJumping && sprite->animation() != DESCEND)
-					sprite->changeAnimation(STAND_RIGHT);
-			}
-		}
-
-		if (bJumping)
-		{
-			jumpAngle += JUMP_ANGLE_STEP;
-
-			// Calcular nueva posición Y (todo entero, sin float intermedios)
-			posPlayer.y = startY - (int)(96 * sin(3.14159f * jumpAngle / 180.f));
-
-			if (jumpAngle > 90) {
-				if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y)) {
-					bJumping = false;
-				}
-			}
-
-			if (jumpAngle >= 180) {
-				bJumping = false;
-				// Si hay suelo en startY, snapeamos; si no, dejamos posPlayer.y actual
-				int checkY = startY;
-				if (map->collisionMoveDown(glm::ivec2(posPlayer.x, startY), glm::ivec2(24, 32), &checkY))
-					posPlayer.y = checkY;
-				// Si no hay suelo, posPlayer.y queda donde está y la gravedad lo maneja
-			}
-
-			if (!bJumping) {
-				if (moving) {
-					if (Game::instance().getKey(GLFW_KEY_LEFT))
-						sprite->changeAnimation(MOVE_LEFT);
-					else if (Game::instance().getKey(GLFW_KEY_RIGHT))
-						sprite->changeAnimation(MOVE_RIGHT);
-				}
-				else {
-					if (sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT)
-						sprite->changeAnimation(STAND_LEFT);
-					else
-						sprite->changeAnimation(STAND_RIGHT);
-				}
-			}
-			else {
-				if (jumpAngle < 90)
-					sprite->changeAnimation(ASCEND);
-				else
-					sprite->changeAnimation(DESCEND);
-			}
-		}
-		else // No está saltando - aplicar gravedad
-		{
-			posPlayer.y += FALL_STEP;
-
-			if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y))
-			{
-				// En el suelo
-				if (!moving) {
-					if (sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT)
-						sprite->changeAnimation(STAND_LEFT);
-					else
-						sprite->changeAnimation(STAND_RIGHT);
-				}
-
-				if (Game::instance().getKey(GLFW_KEY_UP))
-				{
-					bJumping = true;
-					jumpAngle = 0;
-					startY = posPlayer.y;
-				}
-			}
-			else {
-				// Cayendo libremente
-				if (sprite->animation() != DESCEND)
-					sprite->changeAnimation(DESCEND);
-			}
-		}
-	}
-
 	sprite->setPosition(glm::vec2(tileMapDispl + posPlayer));
+}
+
+void Player::handleClimbing() {
+	bJumping = false;
+	bool movingVertically = false;
+
+	// Vertical Movement
+	if (Game::instance().getKey(GLFW_KEY_UP)) {
+		int tileAbove = map->getTileIdAt(posPlayer + glm::ivec2(12, 8)); // Check head level
+		if (tileAbove == 3) {
+			posPlayer.y -= 2;
+			movingVertically = true;
+		}
+	}
+	else if (Game::instance().getKey(GLFW_KEY_DOWN)) {
+		posPlayer.y += 2;
+		// Check floor so we don't climb into the basement
+		map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y);
+		movingVertically = true;
+	}
+
+	int targetAnim = movingVertically ? CLIMB : HANG;
+	if (sprite->animation() != targetAnim) {
+		sprite->changeAnimation(targetAnim);
+	}
+
+	// Allow limited horizontal movement on vines
+	if (Game::instance().getKey(GLFW_KEY_LEFT)) {
+		posPlayer.x -= 1;
+		if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32))) posPlayer.x += 1;
+	}
+	else if (Game::instance().getKey(GLFW_KEY_RIGHT)) {
+		posPlayer.x += 1;
+		if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32))) posPlayer.x -= 1;
+	}
+}
+
+bool Player::handleHorizontalMovement() {
+	bool moving = false;
+
+	if (Game::instance().getKey(GLFW_KEY_LEFT)) {
+		moving = true;
+		if (sprite->animation() != MOVE_LEFT) sprite->changeAnimation(MOVE_LEFT);
+		posPlayer.x -= 2;
+		if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32))) {
+			posPlayer.x += 2;
+			if (!bJumping && sprite->animation() != STAND_LEFT) sprite->changeAnimation(STAND_LEFT);
+		}
+	}
+	else if (Game::instance().getKey(GLFW_KEY_RIGHT)) {
+		moving = true;
+		if (sprite->animation() != MOVE_RIGHT) sprite->changeAnimation(MOVE_RIGHT);
+		posPlayer.x += 2;
+		if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32))) {
+			posPlayer.x -= 2;
+			if (!bJumping && sprite->animation() != STAND_RIGHT) sprite->changeAnimation(STAND_RIGHT);
+		}
+	}
+	return moving;
+}
+
+void Player::updateJumpLogic(bool moving) {
+	jumpAngle += JUMP_ANGLE_STEP;
+	posPlayer.y = startY - (int)(JUMP_HEIGHT * sin(3.14159f * jumpAngle / 180.f));
+
+	if (jumpAngle > 90) {
+		if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y)) {
+			stopJumping();
+		}
+	}
+
+	if (jumpAngle >= 180) stopJumping();
+
+	if (bJumping) {
+		// FIX: Guard the jump animations
+		int targetAnim = (jumpAngle < 90) ? ASCEND : DESCEND;
+		if (sprite->animation() != targetAnim) sprite->changeAnimation(targetAnim);
+	}
+	else {
+		// Transition back
+		if (moving) {
+			int moveAnim = Game::instance().getKey(GLFW_KEY_LEFT) ? MOVE_LEFT : MOVE_RIGHT;
+			if (sprite->animation() != moveAnim) sprite->changeAnimation(moveAnim);
+		}
+		else {
+			int standAnim = (sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT) ? STAND_LEFT : STAND_RIGHT;
+			if (sprite->animation() != standAnim) sprite->changeAnimation(standAnim);
+		}
+	}
+}
+
+// Logic for gravity and jumping
+void Player::updateGravityLogic(bool moving) {
+	posPlayer.y += FALL_STEP;
+
+	if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y)) {
+		if (!moving) {
+			int standAnim = (sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT) ? STAND_LEFT : STAND_RIGHT;
+			if (sprite->animation() != standAnim) sprite->changeAnimation(standAnim);
+		}
+
+		if (Game::instance().getKey(GLFW_KEY_UP)) {
+			bJumping = true;
+			jumpAngle = 0;
+			startY = posPlayer.y;
+		}
+	}
+	else {
+		// Falling off a ledge
+		if (sprite->animation() != DESCEND) sprite->changeAnimation(DESCEND);
+	}
 }
 
 void Player::render(const glm::mat4& modelview)
@@ -319,4 +295,10 @@ void Player::setPosition(const glm::vec2& pos)
 glm::ivec2 Player::getPosition() const
 {
 	return posPlayer;
+}
+
+void Player::stopJumping()
+{
+	bJumping = false;
+	jumpAngle = 0;
 }

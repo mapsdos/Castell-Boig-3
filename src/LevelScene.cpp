@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "LevelScene.h"
 #include "Key.h"
+#include "Door.h"
 #include "Game.h"
 
 #define SCREEN_X 32
@@ -27,17 +28,24 @@ LevelScene::~LevelScene()
 		delete player;
 }
 
-
 void LevelScene::init()
 {
+	init("assets/levels/level01.txt");
+}
+
+void LevelScene::init(string path)
+{
 	initShaders();
-	map = TileMap::createTileMap("assets/levels/level01.txt", glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
+	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
+
+	vector<string> roomFiles = map->getRoomFiles();
 
 	glm::ivec2 size = map->getMapSize();
 	for (int j = 0; j < size.y; j++) {
 		for (int i = 0; i < size.x; i++) {
 			// Check the map data for the key ID (2)
-			if (map->getTileIdAt(glm::ivec2(i * map->getTileSize(), j * map->getTileSize())) == 5) {
+			int tileId = map->getTileIdAt(glm::ivec2(i * map->getTileSize(), j * map->getTileSize()));
+			if (tileId == 5) {
 				Key* newKey = new Key();
 
 				// Calculate pixel position: (Column * TileSize, Row * TileSize)
@@ -49,11 +57,54 @@ void LevelScene::init()
 				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 
 				newKey->init(glm::vec2(x, y), texProgram);
-
-				newKey->init(glm::vec2(x, y), texProgram);
 				items.push_back(newKey);
 			}
+			// Inside the tile loop where tileId == 4
+			else if (tileId == 4) {
+				Door* newDoor = new Door();
+				float x = SCREEN_X + (i * map->getTileSize());
+				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
+				newDoor->init(glm::vec2(x, y), texProgram);
+
+				if (!roomFiles.empty()) {
+					// Create a WHOLE NEW SCENE for the room
+					LevelScene* roomScene = new LevelScene();
+					roomScene->init(roomFiles.back()); // Custom init that takes a filename
+					roomScene->doors[0]->setRoom(this);
+					newDoor->setRoom(roomScene);
+
+					// IMPORTANT: The door inside the roomScene needs to point BACK to 'this'
+					// You'll need a logic to link them back to the current LevelScene
+
+					roomFiles.pop_back();
+				}
+				doors.push_back(newDoor);
+			}
 		}
+	}
+
+	// Get the pair of positions from the map
+	const vector<glm::vec2>& stairPos = map->getPositionsOfStairs();
+
+	for (int i = 0; i < stairPos.size(); i += 2) {
+		// 1. Convert tile coordinates to pixel coordinates
+		float x1 = SCREEN_X + (stairPos[i].x * map->getTileSize());
+		float y1 = SCREEN_Y + (stairPos[i].y * map->getTileSize()) - 15;
+
+		float x2 = SCREEN_X + (stairPos[i + 1].x * map->getTileSize());
+		float y2 = SCREEN_Y + (stairPos[i + 1].y * map->getTileSize()) - 15;
+
+		// 2. Create the Entrance Stair
+		Stairs* stairA = new Stairs();
+		stairA->init(glm::vec2(x1, y1), texProgram);
+		stairA->setDestination(glm::vec2(x2, y2));
+		stairs.push_back(stairA);
+
+		// 3. Create the Exit Stair (so you can go back)
+		Stairs* stairB = new Stairs();
+		stairB->init(glm::vec2(x2, y2), texProgram);
+		stairB->setDestination(glm::vec2(x1, y1));
+		stairs.push_back(stairB);
 	}
 
 	player = new Player();
@@ -67,20 +118,76 @@ void LevelScene::init()
 void LevelScene::update(int deltaTime)
 {
 	currentTime += deltaTime;
-	player->update(deltaTime);
 
-	// Ensure player bounds account for the SCREEN_X/Y offset 
-	// if getPosition() only returns the relative world tile position.
+	if (stairCooldown > 0)
+		stairCooldown -= deltaTime;
+
+	// 1. Calculate player bounds
 	float playerWorldX = player->getPosition().x + SCREEN_X;
 	float playerWorldY = player->getPosition().y + SCREEN_Y;
-
 	float pL = playerWorldX + 4;
 	float pR = playerWorldX + 28;
 	float pT = playerWorldY + 4;
 	float pB = playerWorldY + 28;
 
+	// 2. Check Doors (Room Transitions)
+	for (Door* d : doors) {
+		float dL = d->getPosition().x;
+		float dR = dL + 32;
+		float dT = d->getPosition().y;
+		float dB = dT + 32;
+
+		if (pL < dR && pR > dL && pT < dB && pB > dT) {
+			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0) {
+				LevelScene* targetScene = d->getRoom();
+				if (targetScene != nullptr) {
+					d->setOpened(true);
+
+					// 1. Give the player to the next scene so it can be rendered there
+					targetScene->setPlayer(this->player);
+					targetScene->doors[0]->setOpened(true);
+
+					// 2. CRITICAL: Update the player's internal collision pointer
+					// targetScene->getMap() returns the TileMap object of the new room
+					this->player->setTileMap(targetScene->getMap());
+
+					// 3. Teleport the player to the door's coordinates in the new map
+					glm::vec2 doorPos = targetScene->findFirstDoorPosition();
+					player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
+
+					targetScene->setCooldown();
+
+					// 4. Tell the Game to switch the active Scene
+					Game::instance().setScene(targetScene);
+
+					return;
+				}
+			}
+		}
+	}
+
+	// 3. Check Stairs (Same-map teleportation)
+	for (Stairs* s : stairs) {
+		float sL = s->getPosition().x;
+		float sR = sL + 32;
+		float sT = s->getPosition().y;
+		float sB = sT + 32;
+
+		if (pL < sR && pR > sL && pT < sB && pB > sT) {
+			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0) {
+				glm::vec2 dest = s->getDestination();
+				player->setPosition(dest - glm::vec2(SCREEN_X, SCREEN_Y + 1));
+				stairCooldown = STAIR_DELAY;
+				return;
+			}
+		}
+	}
+
+	// 4. Player Update (with input lock if cooldown is active)
+	player->update(deltaTime, (stairCooldown > 0));
+
+	// 5. Item updates
 	for (auto it = items.begin(); it != items.end(); ) {
-		// The Key iL is already (SCREEN_X + i * tileSize)
 		float iL = (*it)->getPosition().x;
 		float iR = iL + 32;
 		float iT = (*it)->getPosition().y;
@@ -95,6 +202,26 @@ void LevelScene::update(int deltaTime)
 			++it;
 		}
 	}
+}
+
+void LevelScene::setPlayer(Player* newPlayer)
+{
+	player = newPlayer;
+}
+
+glm::vec2 LevelScene::findFirstDoorPosition()
+{
+	if (!doors.empty()) {
+		// Return the pixel position of the first door found in this room
+		return doors[0]->getPosition();
+	}
+	// Fallback if no door is found (preventing a crash)
+	return glm::vec2(100, 100);
+}
+
+void LevelScene::setCooldown()
+{
+	stairCooldown = STAIR_DELAY;
 }
 
 void LevelScene::render()
@@ -132,6 +259,14 @@ void LevelScene::render()
 	map->render();
 	for (unsigned int i = 0; i < items.size(); i++) {
 		items[i]->render(modelview);
+	}
+	for (unsigned int i = 0; i < stairs.size(); i++)
+	{
+		stairs[i]->render(modelview);
+	}
+	for (unsigned int i = 0; i < doors.size(); i++)
+	{
+		doors[i]->render(modelview);
 	}
 	player->render(modelview);
 }
