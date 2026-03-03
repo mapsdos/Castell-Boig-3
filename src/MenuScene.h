@@ -1,34 +1,60 @@
-#ifndef _MENU_SCENE_INCLUDE
-#define _MENU_SCENE_INCLUDE
-
+#pragma once
 #include "Scene.h"
+#include "Sprite.h"
+#include "Texture.h"
+#include "ShaderProgram.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <string>
+#include <vector>
 
-struct Button {
-    glm::vec2 pos;
-    glm::vec2 size;
-    int textureId;
-};
-
-// The "public Scene" part means MenuScene inherits from Scene
 class MenuScene : public Scene
 {
 public:
-    MenuScene();
-    ~MenuScene();
+	MenuScene();
+	~MenuScene();
 
-    // "override" tells the compiler these replace the base Scene versions
-    void init() override;
-    void update(int deltaTime) override;
-    void render() override;
-
-private:
-    void setupButtons();
+	virtual void init();
+	virtual void update(int deltaTime);
+	virtual void render();
 
 private:
-    Texture buttonSheet;
-    Sprite* buttonSprites[3];
+	void initShaders();
+	void moveSelection(int direction);
+	void activateCurrentButton();
+	void loadButtonTextures();
+
+	ShaderProgram texProgram;
+	glm::mat4 projection;
+
+	// Título
+	Texture titleTexture;
+	Sprite* titleSprite;
+
+	// Fondo
+	Texture backgroundTexture;
+	Sprite* backgroundSprite;
+
+	// Botones con sprites
+	struct Button {
+		Sprite* sprite;
+		Texture* texture;
+		glm::vec2 position;
+		int animState; // 0 = normal, 1 = pressed, 2 = selected
+		float animTime;
+	};
+
+	int pressedButton;  // Botón que se está presionando (-1 si ninguno)
+	float pressTime;    // Tiempo para controlar la duración de la presión
+	const float PRESS_DURATION = 200.0f; // Duración en ms
+
+	std::vector<Button> buttons;
+	int selectedButton;
+
+	Texture handTexture;
+	Sprite* handSprite;
+
+	// Control de teclado
+	int keyCooldown;
+	const int KEY_DELAY = 150;
+	float currentTime;
 };
-
-#endif
-
-

@@ -36,6 +36,7 @@ public:
 	
 	void setPosition(const glm::vec2 &pos);
 	glm::vec2 getPosition() const;
+	glm::vec2 getSize() const;
 
 private:
 	Texture *texture;
@@ -48,7 +49,7 @@ private:
 	float timeAnimation;
 	glm::vec2 texCoordDispl;
 	vector<AnimKeyframes> animations;
-
+	glm::vec2 size;
 };
 
 
