@@ -1,5 +1,8 @@
 #include "GraphicsConfig.h"
 #include "Game.h"
+#include "SFX.h"
+#include <SFML/Audio.hpp>
+#include <SFML/System.hpp>
 
 Game::Game()
 	: state(MAIN_MENU),
@@ -21,6 +24,8 @@ Game::Game()
 
 void Game::init()
 {
+	SFX::instance().init();
+	SFX::instance().playMusic("assets/audio/main_menu.mp3", true, 50000.f);
 	bPlay = true;
 	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 	

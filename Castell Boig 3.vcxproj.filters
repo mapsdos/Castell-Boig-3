@@ -66,6 +66,9 @@
     <ClInclude Include="src\Key.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="src\SFX.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Game.cpp">
@@ -113,6 +116,9 @@
     <ClCompile Include="src\Entity.cpp">
       <Filter>Archivos de código fuente</Filter>
     </ClCompile>
+    <ClCompile Include="src\SFX.cpp">
+      <Filter>Archivos de código fuente</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="dlls\glew32.dll">
@@ -121,5 +127,7 @@
     <None Include="dlls\freetype6.dll">
       <Filter>DLLs</Filter>
     </None>
+    <None Include=".gitignore" />
+    <None Include="INSTRUCTIONS.md" />
   </ItemGroup>
 </Project>
