@@ -14,6 +14,7 @@
     <ClInclude Include="src\AnimKeyframes.h" />
     <ClInclude Include="src\CreditsScene.h" />
     <ClInclude Include="src\Door.h" />
+    <ClInclude Include="src\Enemy.h" />
     <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GraphicsConfig.h" />
@@ -21,6 +22,7 @@
     <ClInclude Include="src\Key.h" />
     <ClInclude Include="src\LevelScene.h" />
     <ClInclude Include="src\MenuScene.h" />
+    <ClInclude Include="src\Patroller.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Scene.h" />
     <ClInclude Include="src\Shader.h" />
@@ -33,6 +35,7 @@
   <ItemGroup>
     <ClCompile Include="src\CreditsScene.cpp" />
     <ClCompile Include="src\Door.cpp" />
+    <ClCompile Include="src\Enemy.cpp" />
     <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\Key.cpp" />
     <ClCompile Include="src\Game.cpp" />
@@ -40,6 +43,7 @@
     <ClCompile Include="src\LevelScene.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuScene.cpp" />
+    <ClCompile Include="src\Patroller.cpp" />
     <ClCompile Include="src\Player.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Shader.cpp" />

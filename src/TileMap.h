@@ -50,6 +50,8 @@ public:
 	vector<glm::vec2> getPositionsOfStairs() const;
 
 	vector<string> getRoomFiles() const;
+
+	bool hasFloorAt(const glm::ivec2& pixelPos) const;
 	
 private:
 	bool loadLevel(const string &);

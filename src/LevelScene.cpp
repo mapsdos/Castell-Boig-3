@@ -22,7 +22,7 @@ LevelScene::LevelScene()
 LevelScene::~LevelScene()
 {
 	texProgram.free();
-	if (map != NULL)
+	if (map != nullptr)
 		delete map;
 	if (player != NULL)
 		delete player;

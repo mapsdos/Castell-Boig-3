@@ -13,6 +13,7 @@ public:
     virtual void render(const glm::mat4& modelview) = 0;
 
     glm::vec2 getPosition() const;
+    void setPosition(glm::vec2 pos);
 
 protected:
     glm::vec2 position;

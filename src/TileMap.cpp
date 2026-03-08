@@ -253,3 +253,21 @@ vector<string> TileMap::getRoomFiles() const
 {
 	return roomFiles;
 }
+
+bool TileMap::hasFloorAt(const glm::ivec2& pixelPos) const {
+	// 1. Convert pixel coordinates to tile coordinates
+	int tileX = pixelPos.x / tileSize;
+	int tileY = pixelPos.y / tileSize;
+
+	// 2. Safety bounds check (don't check tiles outside the map)
+	if (tileX < 0 || tileX >= mapSize.x || tileY < 0 || tileY >= mapSize.y) {
+		return false;
+	}
+
+	// 3. Get the tile ID at this location
+	// map is your 1D or 2D array of tile IDs
+	int tileId = map[tileY * mapSize.x + tileX];
+
+	// 4. Return true if the tile is NOT empty (usually 0 is sky/empty)
+	return (tileId > 0);
+}
