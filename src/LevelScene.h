@@ -8,6 +8,7 @@
 #include "Player.h"
 #include "Entity.h"
 #include "Stairs.h"
+#include "Enemy.h"
 
 class Door;
 
@@ -26,6 +27,7 @@ public:
 	void setCooldown();
 	void setPlayer(Player* newPlayer);
 	TileMap* getMap() const { return map; }
+	void LoadEnemies();
 
 private:
 	TileMap* map;
@@ -33,6 +35,7 @@ private:
 	std::vector<Entity*> items;
 	std::vector<Stairs*> stairs;
 	std::vector<Door*> doors;
+	std::vector<Enemy*> enemies;
 	float stairCooldown = 0.0f;
 	const float STAIR_DELAY = 100.0f;
 };

@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Texture.h"
 #include "ShaderProgram.h"
+#include <map>
 
 enum TileType {
 	EMPTY = 0,
@@ -47,9 +48,11 @@ public:
 
 	glm::ivec2 getMapSize() const;
 
-	vector<glm::vec2> getPositionsOfStairs() const;
+	std::map<char, std::vector<glm::vec2>> const & getPositionsOfStairs() const;
 
-	vector<string> getRoomFiles() const;
+	vector<string> const & getRoomFiles() const;
+
+	bool hasFloorAt(const glm::ivec2& pixelPos) const;
 	
 private:
 	bool loadLevel(const string &);
@@ -66,8 +69,8 @@ private:
 	glm::vec2 tileTexSize;
 	int *map;
 	TileType tileType;
-	vector<glm::vec2> positions;
-	vector<string> roomFiles;
+	std::map<char, std::vector<glm::vec2>> positions;
+	std::vector<string> roomFiles;
 };
 
 

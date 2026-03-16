@@ -5,6 +5,8 @@
 #include "Key.h"
 #include "Door.h"
 #include "Game.h"
+#include "Patroller.h"
+#include "Shooter.h"
 
 #define SCREEN_X 32
 #define SCREEN_Y 16
@@ -22,7 +24,7 @@ LevelScene::LevelScene()
 LevelScene::~LevelScene()
 {
 	texProgram.free();
-	if (map != NULL)
+	if (map != nullptr)
 		delete map;
 	if (player != NULL)
 		delete player;
@@ -38,7 +40,8 @@ void LevelScene::init(string path)
 	initShaders();
 	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 
-	vector<string> roomFiles = map->getRoomFiles();
+	vector<string> const & roomFiles = map->getRoomFiles();
+	unsigned roomSize = roomFiles.size();
 
 	glm::ivec2 size = map->getMapSize();
 	for (int j = 0; j < size.y; j++) {
@@ -66,17 +69,17 @@ void LevelScene::init(string path)
 				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newDoor->init(glm::vec2(x, y), texProgram);
 
-				if (!roomFiles.empty()) {
+				if ( roomSize > 0) {
 					// Create a WHOLE NEW SCENE for the room
 					LevelScene* roomScene = new LevelScene();
-					roomScene->init(roomFiles.back()); // Custom init that takes a filename
+					roomScene->init(roomFiles.at(roomSize - 1)); // Custom init that takes a filename
 					roomScene->doors[0]->setRoom(this);
 					newDoor->setRoom(roomScene);
 
 					// IMPORTANT: The door inside the roomScene needs to point BACK to 'this'
 					// You'll need a logic to link them back to the current LevelScene
 
-					roomFiles.pop_back();
+					--roomSize;
 				}
 				doors.push_back(newDoor);
 			}
@@ -84,15 +87,15 @@ void LevelScene::init(string path)
 	}
 
 	// Get the pair of positions from the map
-	const vector<glm::vec2>& stairPos = map->getPositionsOfStairs();
+	std::map<char,std::vector<glm::vec2>> const & stairPos = map->getPositionsOfStairs();
 
-	for (int i = 0; i < stairPos.size(); i += 2) {
+	for(auto iter : stairPos) {
 		// 1. Convert tile coordinates to pixel coordinates
-		float x1 = SCREEN_X + (stairPos[i].x * map->getTileSize());
-		float y1 = SCREEN_Y + (stairPos[i].y * map->getTileSize()) - 15;
+		float x1 = SCREEN_X + (iter.second[0].x * map->getTileSize());
+		float y1 = SCREEN_Y + (iter.second[0].y * map->getTileSize()) - 15;
 
-		float x2 = SCREEN_X + (stairPos[i + 1].x * map->getTileSize());
-		float y2 = SCREEN_Y + (stairPos[i + 1].y * map->getTileSize()) - 15;
+		float x2 = SCREEN_X + (iter.second[1].x * map->getTileSize());
+		float y2 = SCREEN_Y + (iter.second[1].y * map->getTileSize()) - 15;
 
 		// 2. Create the Entrance Stair
 		Stairs* stairA = new Stairs();
@@ -113,6 +116,23 @@ void LevelScene::init(string path)
 	player->setTileMap(map);
 	projection = glm::ortho(0.f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.f);
 	currentTime = 0.0f;
+
+	LoadEnemies();
+}
+
+void LevelScene::LoadEnemies()
+{
+	Patroller* patroller = new Patroller();
+	patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	patroller->setPosition(glm::vec2((INIT_PLAYER_X_TILES + 7) * map->getTileSize(), (INIT_PLAYER_Y_TILES - 4) * map->getTileSize()));
+	patroller->setTileMap(map);
+	enemies.push_back(patroller);
+
+	Shooter* shooter= new Shooter();
+	shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	shooter->setPosition(glm::vec2((INIT_PLAYER_X_TILES + 10) * map->getTileSize(), (INIT_PLAYER_Y_TILES - 4) * map->getTileSize()));
+	shooter->setTileMap(map);
+	enemies.push_back(shooter);
 }
 
 void LevelScene::update(int deltaTime)
@@ -202,6 +222,20 @@ void LevelScene::update(int deltaTime)
 			++it;
 		}
 	}
+
+	// Enemy updates
+	for (Enemy* e : enemies) {
+		e->update(deltaTime);
+
+		// 1. Try to cast the generic Enemy to a Shooter
+		Shooter* shooter = dynamic_cast<Shooter*>(e);
+
+		// 2. If the cast succeeded, shooter will not be NULL
+		if (shooter != nullptr) {
+			// Now you can access Shooter-specific functions
+			shooter->Shoot(deltaTime, texProgram);
+		}
+	}
 }
 
 void LevelScene::setPlayer(Player* newPlayer)
@@ -227,7 +261,6 @@ void LevelScene::setCooldown()
 void LevelScene::render()
 {
 	glm::mat4 modelview;
-
 	// 1. Set the Zoom (Projection)
 	// Instead of the full 640x480, we define a view volume of 320x240
 	float zoomWidth = 320.0f;
@@ -267,6 +300,10 @@ void LevelScene::render()
 	for (unsigned int i = 0; i < doors.size(); i++)
 	{
 		doors[i]->render(modelview);
+	}
+	for (unsigned int i = 0; i < enemies.size(); i++)
+	{
+		enemies[i]->render(modelview);
 	}
 	player->render(modelview);
 }
