@@ -26,6 +26,7 @@
     <ClInclude Include="src\Patroller.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Scene.h" />
+    <ClInclude Include="src\SFX.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\ShaderProgram.h" />
     <ClInclude Include="src\Shooter.h" />
@@ -49,6 +50,7 @@
     <ClCompile Include="src\Patroller.cpp" />
     <ClCompile Include="src\Player.cpp" />
     <ClCompile Include="src\Scene.cpp" />
+    <ClCompile Include="src\SFX.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
     <ClCompile Include="src\Shooter.cpp" />
@@ -61,6 +63,7 @@
     <None Include=".gitignore" />
     <None Include="dlls\freetype6.dll" />
     <None Include="dlls\glew32.dll" />
+    <None Include="INSTRUCTIONS.md" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5BE6CA2A-E5A8-40CC-9015-047CE0C78036}</ProjectGuid>
@@ -72,7 +75,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -107,14 +110,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)libs\Simple OpenGL Image Library\src;$(ProjectDir)libs\glew-1.13.0\include;$(ProjectDir)libs\glm;$(ProjectDir)libs\glfw-3.3.8\include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>Default</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)libs\Simple OpenGL Image Library\src;$(ProjectDir)libs\glew-1.13.0\include;$(ProjectDir)libs\glm;$(ProjectDir)libs\glfw-3.3.8\include;$(ProjectDir)src;%(AdditionalIncludeDirectories);$(ProjectDir)libs\SFML-2.6.1\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)libs\Simple OpenGL Image Library\projects\VC9\Debug;$(ProjectDir)libs\glew-1.13.0\lib\Release\Win32;$(ProjectDir)libs\glfw-3.3.8\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SOIL.lib;glew32.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SOIL.lib;glew32.lib;glfw3.lib;opengl32.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-audio-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)libs\Simple OpenGL Image Library\projects\VC9\Debug;$(ProjectDir)libs\glew-1.13.0\lib\Release\Win32;$(ProjectDir)libs\glfw-3.3.8\lib-vc2015;sfml-audio-d.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;$(ProjectDir)libs\SFML-2.6.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(ProjectDir)dlls\*.dll" "$(OutDir)"</Command>
@@ -129,18 +132,18 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>\libs\Simple OpenGL Image Library\src;\libs\glfw-3.3.8\include;\libs\glew-1.13.0\include;\libs\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>\libs\Simple OpenGL Image Library\src;\libs\glfw-3.3.8\include;\libs\glew-1.13.0\include;\libs\glm;%(AdditionalIncludeDirectories);$(ProjectDir)libs\SFML-2.6.1\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>\libs\Simple OpenGL Image Library\projects\VC9\Debug;\libs\glfw-3.3.8\lib-vc2015;\libs\glew-1.13.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SOIL.lib;glew32.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>\libs\Simple OpenGL Image Library\projects\VC9\Debug;\libs\glfw-3.3.8\lib-vc2015;\libs\glew-1.13.0\lib\Release\Win32;$(ProjectDir)libs\SFML-2.6.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SOIL.lib;glew32.lib;glfw3.lib;opengl32.lib;sfml-audio-d.lib;sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>
