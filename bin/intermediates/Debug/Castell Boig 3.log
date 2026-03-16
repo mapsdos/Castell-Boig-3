@@ -1,3 +1,8 @@
-﻿  Player.cpp
-  Castell Boig 3.vcxproj -> C:\Users\arnau\Downloads\Castell Boig 3\bin\Debug\Castell Boig 3.exe
-  0 archivo(s) copiado(s)
+﻿  Bullet.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared\minwindef.h(130,9): warning C4005: 'APIENTRY': macro redefinition
+  (compiling source file 'src/Bullet.cpp')
+      C:\Users\andre\source\repos\Castell-Boig-3\libs\glfw-3.3.8\include\GLFW\glfw3.h(123,11):
+      see previous definition of 'APIENTRY'
+  
+  Castell Boig 3.vcxproj -> C:\Users\andre\source\repos\Castell-Boig-3\bin\Debug\Castell Boig 3.exe
+  0 File(s) copied
