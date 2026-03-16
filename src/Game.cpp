@@ -1,6 +1,7 @@
 #include "GraphicsConfig.h"
 #include "Game.h"
 #include "SFX.h"
+#include "CreditsScene.h"
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>
 
@@ -25,7 +26,7 @@ Game::Game()
 void Game::init()
 {
 	SFX::instance().init();
-	SFX::instance().playMusic("assets/audio/main_menu.mp3", true, 50000.f);
+	SFX::instance().playMusic("assets/audio/main_menu.mp3", true, 50.f);
 	bPlay = true;
 	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 	
@@ -33,6 +34,10 @@ void Game::init()
 	
 	menuScene = new MenuScene();
 	menuScene->init();
+
+	//creditsScene = new CreditsScene();
+	//creditsScene->init();
+
 	currentScene = menuScene;
 
 	level1Scene = new LevelScene();
@@ -117,6 +122,10 @@ void Game::changeState(GameState newState)
 		break;
 	case PLAYING:
 		currentScene = level1Scene;
+		break;
+	case CREDITS:
+		currentScene = creditsScene;
+		break;
 	}
 }
 
