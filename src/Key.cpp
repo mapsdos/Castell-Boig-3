@@ -1,5 +1,4 @@
 #include "Key.h"
-#include "iostream"
 
 // In Key.cpp
 void Key::init(const glm::vec2& pos, ShaderProgram& program) {
