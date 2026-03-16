@@ -15,7 +15,7 @@ public:
 protected:
     TileMap* map;
     glm::ivec2 startPosition;
-    bool moveRight = true;
+    bool moveRight = false;
 };
 
 #endif

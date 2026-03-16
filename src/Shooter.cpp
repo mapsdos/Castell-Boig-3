@@ -1,22 +1,22 @@
-#include "Patroller.h"
+#include "Shooter.h"
 #include <iostream>
 
-void Patroller::init(const glm::vec2& pos, ShaderProgram& program) {
+void Shooter::init(const glm::vec2& pos, ShaderProgram& program) {
     Enemy::init(pos, program); // Call base init to set position
     movementTimer = 1000;
     isIdle = false;
 
     // Load your specific enemy image
-    spritesheet.loadFromFile("assets/images/squidward-dancing-pixel.png", TEXTURE_PIXEL_FORMAT_RGBA);
+    spritesheet.loadFromFile("assets/images/Mr_Krabs.png", TEXTURE_PIXEL_FORMAT_RGBA);
     sprite = Sprite::createSprite(glm::vec2(32, 32), glm::vec2(1.0f, 1.0f), &spritesheet, &program);
-    
+
     sprite->setNumberAnimations(1);
     sprite->setAnimationSpeed(0, 1);       // Prevent infinite loop crash
     sprite->addKeyframe(0, glm::vec2(0.f, 0.f)); // Start at top-left of image
     sprite->changeAnimation(0);            // Activate animation
 }
 
-void Patroller::update(int deltaTime) {
+void Shooter::update(int deltaTime) {
     int mapX = (int)position.x - 32;
     int mapY = (int)position.y - 16;
     bool shouldTurn = false;
@@ -27,6 +27,11 @@ void Patroller::update(int deltaTime) {
         isIdle = !isIdle; // Toggle between walking and stopping
         // Random time: 1-3 seconds
         movementTimer = 1000 + (rand() % 2000);
+    }
+
+    for (Bullet* b : bullets)
+    {
+        b->update(deltaTime);
     }
 
     if (isIdle) {
@@ -69,4 +74,31 @@ void Patroller::update(int deltaTime) {
 
     sprite->setPosition(position);
     sprite->update(deltaTime);
+}
+
+void Shooter::render(const glm::mat4& modelview) {
+    // 1. Draw Mr. Krabs himself
+    Enemy::render(modelview);
+
+    // 2. Draw all bullets that currently exist
+    // If the vector is empty, this loop is skipped automatically!
+    for (Bullet* b : bullets) {
+        b->render(modelview);
+    }
+}
+
+void Shooter::Shoot(int deltaTime, ShaderProgram& program) {
+    shotTimer -= deltaTime;
+    if (shotTimer <= 0) {
+        shotTimer = 1500 + (rand() % 2000);
+
+        Bullet* bullet = new Bullet();
+        // Spawn slightly in front of Mr. Krabs
+        glm::vec2 spawnPos = position + glm::vec2(8, 8);
+
+        bullet->init(spawnPos, program, moveRight);
+
+        // Adding it to the vector makes it "exist" for the update and render loops
+        bullets.push_back(bullet);
+    }
 }
