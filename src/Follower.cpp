@@ -27,7 +27,7 @@ void Follower::update(int deltaTime, const glm::vec2& playerPos) {
     // 1. Path Management
     timer -= deltaTime;
     if (pathSequence.empty() || timer <= 0) {
-        glm::vec2 feetPos = glm::vec2(position.x + 16, position.y + 16);
+        glm::vec2 feetPos = glm::vec2(position.x + 16, position.y + 24);
         glm::vec2 playerFeet = glm::vec2(playerPos.x + 16, playerPos.y + 16);
         pathSequence = map->getPath(feetPos, playerFeet);
         timer = 500; // Fixed: Use '=' not '=='
@@ -61,77 +61,64 @@ void Follower::followPath(int deltaTime) {
 
     PathStep& current = pathSequence.front();
     float moveAmount = speed * deltaTime;
-    glm::vec2 size = glm::vec2(24, 32); // Slightly thinner than 32 to avoid "snagging"
+    int intPosY;
 
+    // 1. Execute Command
     switch (current.command) {
     case AICommand::MOVE_LEFT:
-        // Only move if there is NO collision to the left
-        if (!map->collisionMoveLeft(glm::ivec2(position.x - moveAmount, position.y), size)) {
-            position.x -= moveAmount;
-        }
-        else {
-            current.distance = 0; // Blocked! Force next tile or recalculation
-        }
+        position.x -= moveAmount;
         break;
-
     case AICommand::MOVE_RIGHT:
-        if (!map->collisionMoveRight(glm::ivec2(position.x + moveAmount, position.y), size)) {
-            position.x += moveAmount;
-        }
-        else {
-            current.distance = 0; // Blocked!
-        }
+        position.x += moveAmount;
         break;
-
     case AICommand::CLIMB_UP:
-        // Ensure he doesn't clip through a ceiling
         position.y -= moveAmount;
         break;
-
     case AICommand::CLIMB_DOWN:
-    {
-        int intPosY;
-        // Check if there's a floor before moving down
-        if (map->collisionMoveDown(glm::ivec2(position.x + 4, position.y + moveAmount), size, &intPosY)) {
+        // Prevent clipping: if floor is hit, stop immediately
+        if (map->collisionMoveDown(glm::ivec2(position.x + 8, position.y + moveAmount), glm::vec2(16, 32), &intPosY)) {
             position.y = (float)intPosY;
-            current.distance = 0; // We hit the floor, stop climbing
+            current.distance = 0;
         }
         else {
             position.y += moveAmount;
         }
         break;
-    }
-
     case AICommand::FALL:
     {
+        // Horizontal nudge to clear ledges
         float diffX = current.targetPoint.x - position.x;
-        // Nudge horizontally
         if (abs(diffX) > 1.0f) {
-            float nudge = (diffX > 0 ? 1 : -1) * moveAmount;
-            // Check collision before nudging off ledge
-            if (nudge > 0 && !map->collisionMoveRight(glm::ivec2(position.x + nudge, position.y), size))
-                position.x += nudge;
-            else if (nudge < 0 && !map->collisionMoveLeft(glm::ivec2(position.x + nudge, position.y), size))
-                position.x += nudge;
+            position.x += (diffX > 0 ? 1 : -1) * moveAmount;
         }
-
-        // Finish if we reached the Y or if gravity has landed us
-        if (position.y >= (current.targetPoint.y - 4.0f) || current.distance <= 0) {
-            current.distance = 0;
-        }
+        // Vertical completion handled by targetPoint check below
         break;
     }
     case AICommand::TRANSPORT:
-        this->setPosition(glm::vec2(current.targetPoint.x, current.targetPoint.y - 16));
-        current.distance = 0; // Force immediate completion
-        moveAmount = 0;
-        pathSequence.clear();
-        break;
+        this->setPosition(current.targetPoint);
+        pathSequence.erase(pathSequence.begin());
+        return; // Exit immediately after teleport
     }
 
+    // 2. Update Progress
     current.distance -= moveAmount;
-    if (current.distance <= 0) {
-        if (!pathSequence.empty()) pathSequence.erase(pathSequence.begin());
+
+    // 3. Smooth Transition Check
+    // Instead of snapping, we check if we've passed or reached the target coordinate
+    bool reached = false;
+    if (current.command == AICommand::MOVE_LEFT && position.x <= current.targetPoint.x) reached = true;
+    else if (current.command == AICommand::MOVE_RIGHT && position.x >= current.targetPoint.x) reached = true;
+    else if (current.command == AICommand::CLIMB_UP && position.y <= current.targetPoint.y) reached = true;
+    else if (current.command == AICommand::CLIMB_DOWN && position.y >= current.targetPoint.y) reached = true;
+    else if (current.command == AICommand::FALL && position.y >= current.targetPoint.y) reached = true;
+    else if (current.distance <= 0) reached = true;
+
+    if (reached) {
+        // Only snap if the difference is tiny (< 2px) to keep it looking smooth
+        if (glm::distance(position, current.targetPoint) < 2.0f) {
+            position = current.targetPoint;
+        }
+        pathSequence.erase(pathSequence.begin());
     }
 }
 

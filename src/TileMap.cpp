@@ -391,32 +391,41 @@ std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP)
 			int y2 = to / mapSize.x;
 
 			PathStep step;
-			// targetPoint should be the TOP-LEFT of the tile for easier sprite positioning
-			step.targetPoint = glm::vec2(x2 * tileSize, y2 * tileSize);
-			step.distance = (float)tileSize;
-			int xDist = abs(from - to) % mapSize.x;
-			int yDist = abs(from - to) / mapSize.x;
 
-			//Don't put stairs on the same x block else this will fail.
-			if (xDist > 1 || yDist > 1) { // STAIR CASE
+			// Dimension Correction:
+			// To center Plankton's lower 24px wide area on a 16px tile:
+			// X: (x * 16) + (16/2) - (24/2) = (x * 16) - 4
+			// Y: (y * 16) + 16 (bottom of tile) - 32 (height of sprite) = (y * 16) - 16
+			step.targetPoint = glm::vec2((x2 * tileSize) - 4.0f, (y2 * tileSize) - 16.0f);
+
+			step.distance = (float)tileSize;
+
+			// Use absolute tile coordinate differences for stair detection
+			int xDiff = abs(x2 - x1);
+			int yDiff = abs(y2 - y1);
+
+			// 1. STAIR CASE (Restored your original check)
+			if (xDiff > 1 || yDiff > 1) {
 				step.command = AICommand::TRANSPORT;
 				step.distance = 0;
+				// For transport, we must use your specific door/stair offset
+				step.targetPoint = glm::vec2(x2 * tileSize, (y2 * tileSize) - 16.0f);
 			}
+			// 2. VERTICAL MOVEMENT
 			else if (y2 > y1) {
 				if (map[to] == 3 || map[from] == 3) {
 					step.command = AICommand::CLIMB_DOWN;
 				}
 				else {
-					// Look at the previous move. If we were moving horizontally, 
-					// we might need a "Walk-Off" move instead of an instant drop.
 					step.command = AICommand::FALL;
-					// Increase distance slightly to ensure he clears the ledge corner
+					// Restored your specific fall distance multiplier
 					step.distance = (float)tileSize * 1.2f;
 				}
 			}
 			else if (y2 < y1) {
 				step.command = AICommand::CLIMB_UP;
 			}
+			// 3. HORIZONTAL MOVEMENT
 			else if (x2 > x1) step.command = AICommand::MOVE_RIGHT;
 			else if (x2 < x1) step.command = AICommand::MOVE_LEFT;
 
