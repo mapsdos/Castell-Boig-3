@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <queue>
 #include "TileMap.h"
 
 
@@ -104,7 +105,7 @@ bool TileMap::loadLevel(const string &levelFile)
 			else if (tile >= 'a' && tile <= 'z')
 			{
 				positions[tile].push_back(glm::vec2(i, j));
-				map[j * mapSize.x + i] = 0;
+				map[j * mapSize.x + i] = tile;
 			}
 			else
 				map[j*mapSize.x+i] = tile - int('0');
@@ -262,6 +263,172 @@ std::map<char, std::vector<glm::vec2>> const & TileMap::getPositionsOfStairs() c
 vector<string> const & TileMap::getRoomFiles() const
 {
 	return roomFiles;
+}
+
+std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP)
+{
+	// 1. Convert pixel positions to Tile coordinates
+	int startX = static_cast<int>(posE.x / tileSize);
+	int startY = static_cast<int>(posE.y / tileSize);
+	int targetX = static_cast<int>(posP.x / tileSize);
+	int targetY = static_cast<int>(posP.y / tileSize);
+
+	if (startX < 0 || startX >= mapSize.x || startY < 0 || startY >= mapSize.y ||
+		targetX < 0 || targetX >= mapSize.x || targetY < 0 || targetY >= mapSize.y) {
+		return {}; // Return empty path if anyone is outside the map
+	}
+
+	int startIdx = startY * mapSize.x + startX;
+	int targetIdx = targetY * mapSize.x + targetX;
+
+	if (startIdx == targetIdx) return {};
+
+	std::queue<int> nxtPos;
+	std::vector<int> parent(mapSize.x * mapSize.y, -1); // To reconstruct path
+	std::vector<bool> visited(mapSize.x * mapSize.y, false);
+
+	nxtPos.push(startIdx);
+	visited[startIdx] = true;
+
+	bool found = false;
+	int rec = 0;
+	while (!nxtPos.empty() && rec < 10000)
+	{
+		rec++;
+		int curr = nxtPos.front();
+		nxtPos.pop();
+
+		if (curr == targetIdx) {
+			found = true;
+			break;
+		}
+
+		std::vector<int> neighbors;
+		int tileVal = map[curr];
+		int x = curr % mapSize.x;
+		int y = curr / mapSize.x;
+
+		// 1. Check for floor existence
+		bool hasFloorBelow = false;
+		int downIdx = curr + mapSize.x;
+		if (downIdx < mapSize.x * mapSize.y) {
+			// We consider it a "floor" if the tile below is a wall (1) or another vine (3)
+			if (map[downIdx] == 1 || map[downIdx] == 3) {
+				hasFloorBelow = true;
+			}
+		}
+
+		// 2. Priority Logic
+
+		// CONDITION: IF ON VINE (3rd Priority)
+		// Vines allow free vertical movement regardless of floors
+		if (tileVal == 3) {
+			// Up
+			if (y > 0) {
+				int up = curr - mapSize.x;
+				if (map[up] == 3 || map[up] == 0) neighbors.push_back(up);
+			}
+			// Down
+			if (downIdx < mapSize.x * mapSize.y) {
+				if (map[downIdx] == 3 || map[downIdx] == 0 || map[downIdx] == 1) neighbors.push_back(downIdx);
+			}
+		}
+
+		// CONDITION: FLOOR vs FALLING (1st & 2nd Priority)
+		if (hasFloorBelow || tileVal == 3) {
+			// If on a floor (or vine), he can move Left & Right
+			if (x > 0) neighbors.push_back(curr - 1);
+			if (x < mapSize.x - 1) neighbors.push_back(curr + 1);
+		}
+		else {
+			// No floor and not on a vine: MUST fall down. 
+			// We don't add Left/Right here, so the path is forced straight down.
+			if (downIdx < mapSize.x * mapSize.y) {
+				neighbors.push_back(downIdx);
+			}
+		}
+
+		// CONDITION: STAIRS (4th Priority)
+		if (tileVal >= 'a' && tileVal <= 'z') {
+			char stairChar = (char)tileVal;
+			const std::vector<glm::vec2>& pair = positions.at(stairChar);
+			for (const glm::vec2& p : pair) {
+				int stairIdx = (int)p.y * mapSize.x + (int)p.x;
+				if (stairIdx != curr) neighbors.push_back(stairIdx);
+			}
+		}
+
+		// Final validation and push to queue
+		for (int next : neighbors) {
+			// Ensure we don't walk into walls (1) and haven't visited this tile
+			if (!visited[next] && map[next] != 1) {
+				visited[next] = true;
+				parent[next] = curr;
+				nxtPos.push(next);
+			}
+		}
+	}
+
+	// 3. Reconstruct the path from target back to start
+	std::vector<PathStep> sequence;
+	if (found) {
+		std::vector<int> indices;
+		int currIdx = targetIdx;
+		while (currIdx != -1) {
+			indices.push_back(currIdx);
+			currIdx = parent[currIdx];
+		}
+		std::reverse(indices.begin(), indices.end());
+
+		// Inside the reconstruction loop of TileMap::getPath
+		for (size_t i = 0; i < indices.size() - 1; ++i) {
+			int from = indices[i];
+			int to = indices[i + 1];
+
+			int x1 = from % mapSize.x;
+			int y1 = from / mapSize.x;
+			int x2 = to % mapSize.x;
+			int y2 = to / mapSize.x;
+
+			PathStep step;
+			// targetPoint should be the TOP-LEFT of the tile for easier sprite positioning
+			step.targetPoint = glm::vec2(x2 * tileSize, y2 * tileSize);
+			step.distance = (float)tileSize;
+			int xDist = abs(from - to) % mapSize.x;
+			int yDist = abs(from - to) / mapSize.x;
+
+			//Don't put stairs on the same x block else this will fail.
+			if (xDist > 1 || yDist > 1) { // STAIR CASE
+				step.command = AICommand::TRANSPORT;
+				step.distance = 0;
+			}
+			else if (y2 > y1) {
+				if (map[to] == 3 || map[from] == 3) {
+					step.command = AICommand::CLIMB_DOWN;
+				}
+				else {
+					// Look at the previous move. If we were moving horizontally, 
+					// we might need a "Walk-Off" move instead of an instant drop.
+					step.command = AICommand::FALL;
+					// Increase distance slightly to ensure he clears the ledge corner
+					step.distance = (float)tileSize * 1.2f;
+				}
+			}
+			else if (y2 < y1) {
+				step.command = AICommand::CLIMB_UP;
+			}
+			else if (x2 > x1) step.command = AICommand::MOVE_RIGHT;
+			else if (x2 < x1) step.command = AICommand::MOVE_LEFT;
+
+			sequence.push_back(step);
+		}
+	}
+	for (auto ps : sequence)
+	{
+		cout << ps.targetPoint.x << " " << ps.targetPoint.y << " " << (ps.command == AICommand::TRANSPORT) << "\n";
+	}
+	cout << "\n";
+	return sequence;
 }
 
 bool TileMap::hasFloorAt(const glm::ivec2& pixelPos) const {

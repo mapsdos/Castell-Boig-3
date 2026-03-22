@@ -13,12 +13,13 @@ public:
     virtual void render(const glm::mat4& modelview) = 0;
 
     glm::vec2 getPosition() const { return position; }
-    void setPosition(glm::vec2 pos) { position = pos; }
+    virtual void setPosition(const glm::vec2 &pos);
 
 protected:
     glm::vec2 position;
     Sprite* sprite;
     Texture spritesheet;
+    glm::ivec2 tileMapDispl;
 };
 
 #endif

@@ -17,8 +17,8 @@ void Patroller::init(const glm::vec2& pos, ShaderProgram& program) {
 }
 
 void Patroller::update(int deltaTime) {
-    int mapX = (int)position.x - 32;
-    int mapY = (int)position.y - 16;
+    int mapX = (int)position.x;
+    int mapY = (int)position.y;
     bool shouldTurn = false;
 
     // --- 1. IDLE LOGIC ---
@@ -67,6 +67,6 @@ void Patroller::update(int deltaTime) {
         position.x += moveRight ? speed : -speed;
     }
 
-    sprite->setPosition(position);
+    this->setPosition(position);
     sprite->update(deltaTime);
 }

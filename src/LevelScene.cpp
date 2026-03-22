@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include "LevelScene.h"
 #include "Key.h"
@@ -7,6 +8,7 @@
 #include "Game.h"
 #include "Patroller.h"
 #include "Shooter.h"
+#include "Follower.h"
 
 #define SCREEN_X 32
 #define SCREEN_Y 16
@@ -19,6 +21,7 @@ LevelScene::LevelScene()
 {
 	map = NULL;
 	player = NULL;
+	doorNum = 0;
 }
 
 LevelScene::~LevelScene()
@@ -42,6 +45,7 @@ void LevelScene::init(string path)
 
 	vector<string> const & roomFiles = map->getRoomFiles();
 	unsigned roomSize = roomFiles.size();
+	doorNum = 0;
 
 	glm::ivec2 size = map->getMapSize();
 	for (int j = 0; j < size.y; j++) {
@@ -75,6 +79,8 @@ void LevelScene::init(string path)
 					roomScene->init(roomFiles.at(roomSize - 1)); // Custom init that takes a filename
 					roomScene->doors[0]->setRoom(this);
 					newDoor->setRoom(roomScene);
+					roomScene->enemies.clear();
+					roomScene->setDoorNum(roomFiles.size() - roomSize);
 
 					// IMPORTANT: The door inside the roomScene needs to point BACK to 'this'
 					// You'll need a logic to link them back to the current LevelScene
@@ -124,15 +130,21 @@ void LevelScene::LoadEnemies()
 {
 	Patroller* patroller = new Patroller();
 	patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	patroller->setPosition(glm::vec2((INIT_PLAYER_X_TILES + 7) * map->getTileSize(), (INIT_PLAYER_Y_TILES - 4) * map->getTileSize()));
+	patroller->setPosition(glm::vec2((INIT_PLAYER_X_TILES) * map->getTileSize(), (INIT_PLAYER_Y_TILES) * map->getTileSize()));
 	patroller->setTileMap(map);
 	enemies.push_back(patroller);
 
 	Shooter* shooter= new Shooter();
 	shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	shooter->setPosition(glm::vec2((INIT_PLAYER_X_TILES + 10) * map->getTileSize(), (INIT_PLAYER_Y_TILES - 4) * map->getTileSize()));
+	shooter->setPosition(glm::vec2((INIT_PLAYER_X_TILES) * map->getTileSize(), (INIT_PLAYER_Y_TILES) * map->getTileSize()));
 	shooter->setTileMap(map);
 	enemies.push_back(shooter);
+
+	Follower* follower = new Follower();
+	follower->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	follower->setPosition(glm::vec2((INIT_PLAYER_X_TILES) * map->getTileSize(), (INIT_PLAYER_Y_TILES) * map->getTileSize()));
+	follower->setTileMap(map);
+	enemies.push_back(follower);
 }
 
 void LevelScene::update(int deltaTime)
@@ -165,14 +177,14 @@ void LevelScene::update(int deltaTime)
 
 					// 1. Give the player to the next scene so it can be rendered there
 					targetScene->setPlayer(this->player);
-					targetScene->doors[0]->setOpened(true);
+					targetScene->doors[doorNum]->setOpened(true);
 
 					// 2. CRITICAL: Update the player's internal collision pointer
 					// targetScene->getMap() returns the TileMap object of the new room
 					this->player->setTileMap(targetScene->getMap());
 
 					// 3. Teleport the player to the door's coordinates in the new map
-					glm::vec2 doorPos = targetScene->findFirstDoorPosition();
+					glm::vec2 doorPos = targetScene->findDoorPosition(doorNum);
 					player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
 
 					targetScene->setCooldown();
@@ -225,15 +237,24 @@ void LevelScene::update(int deltaTime)
 
 	// Enemy updates
 	for (Enemy* e : enemies) {
-		e->update(deltaTime);
+		Follower* follower = dynamic_cast<Follower*>(e);
 
-		// 1. Try to cast the generic Enemy to a Shooter
-		Shooter* shooter = dynamic_cast<Shooter*>(e);
+		if (follower != nullptr)
+		{
+			follower->update(deltaTime, player->getPosition());
+		}
+		else
+		{
+			e->update(deltaTime);
 
-		// 2. If the cast succeeded, shooter will not be NULL
-		if (shooter != nullptr) {
-			// Now you can access Shooter-specific functions
-			shooter->Shoot(deltaTime, texProgram);
+			// 1. Try to cast the generic Enemy to a Shooter
+			Shooter* shooter = dynamic_cast<Shooter*>(e);
+
+			// 2. If the cast succeeded, shooter will not be NULL
+			if (shooter != nullptr) {
+				// Now you can access Shooter-specific functions
+				shooter->Shoot(deltaTime, texProgram);
+			}
 		}
 	}
 }
@@ -243,13 +264,15 @@ void LevelScene::setPlayer(Player* newPlayer)
 	player = newPlayer;
 }
 
-glm::vec2 LevelScene::findFirstDoorPosition()
+glm::vec2 LevelScene::findDoorPosition(int numDoor)
 {
-	if (!doors.empty()) {
-		// Return the pixel position of the first door found in this room
-		return doors[0]->getPosition();
+	// Check if the vector is empty or the pointer is null
+	if (!doors.empty() && numDoor < doors.size())
+	{
+		return doors[numDoor]->getPosition();
 	}
-	// Fallback if no door is found (preventing a crash)
+
+	// Fallback if that specific door isn't in this room
 	return glm::vec2(100, 100);
 }
 
@@ -306,4 +329,9 @@ void LevelScene::render()
 		enemies[i]->render(modelview);
 	}
 	player->render(modelview);
+}
+
+void LevelScene::setDoorNum(int numDoor)
+{
+	doorNum = numDoor;
 }

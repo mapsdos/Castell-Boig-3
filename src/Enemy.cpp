@@ -2,8 +2,7 @@
 
 void Enemy::init(const glm::vec2& pos, ShaderProgram& program)
 {
-    position = pos;
-    startPosition = pos;
+    tileMapDispl = pos;
     // We don't load a specific spritesheet here because 
     // each enemy type (Patroller vs Chaser) will have its own look.
 }
