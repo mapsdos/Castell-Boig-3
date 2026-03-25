@@ -26,9 +26,9 @@ public:
 	glm::ivec2 getPosition() const;
 
 	bool isGodMode() const { return godMode; }
-
+	Sprite* getSprite() const { return sprite; }
 	void stopJumping();
-
+	void startDoorEnterAnimation();
 private:
 	void handleClimbing();
 	bool handleHorizontalMovement();
