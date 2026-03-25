@@ -194,18 +194,25 @@ void LevelScene::update(int deltaTime)
 	// 2. Check Doors (Room Transitions)
 	for (Door* d : doors)
 	{
-		float dL = d->getPosition().x;
-		float dR = dL + 32;
-		float dT = d->getPosition().y;
-		float dB = dT + 32;
+		// Centro del jugador
+		float pCenterX = player->getPosition().x + SCREEN_X + 12.f; // 12 = mitad de 24px
+		float pCenterY = player->getPosition().y + SCREEN_Y + 16.f; // 16 = mitad de 32px
 
-		if (pL < dR && pR > dL && pT < dB && pB > dT)
+		// Centro de la puerta
+		float dCenterX = d->getPosition().x + 16.f;
+		float dCenterY = d->getPosition().y + 16.f;
+
+		float distX = abs(pCenterX - dCenterX);
+		float distY = abs(pCenterY - dCenterY);
+
+		// Solo activa si el jugador está muy cerca en X e Y
+		// Ajusta estos valores si sigue siendo demasiado amplio o estrecho
+		if (distX < 12.f && distY < 14.f)
 		{
 			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0)
 			{
 				if (d->getRoom() != nullptr)
 				{
-					// Start the animation and freeze — transition happens above
 					pendingDoor = d;
 					enteringDoor = true;
 					enterAnimTimer = 0.f;
