@@ -23,11 +23,12 @@ public:
 	void init(string path);
 	void update(int deltaTime) override;
 	void render() override;
-	glm::vec2 findFirstDoorPosition();
+	glm::vec2 findDoorPosition(int numDoor);
 	void setCooldown();
 	void setPlayer(Player* newPlayer);
 	TileMap* getMap() const { return map; }
 	void LoadEnemies();
+	void setDoorNum(int numDoor);
 
 private:
 	TileMap* map;
@@ -38,6 +39,7 @@ private:
 	std::vector<Enemy*> enemies;
 	float stairCooldown = 0.0f;
 	const float STAIR_DELAY = 100.0f;
+	int doorNum;
 };
 
 #endif

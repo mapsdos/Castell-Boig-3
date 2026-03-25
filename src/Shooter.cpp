@@ -17,8 +17,8 @@ void Shooter::init(const glm::vec2& pos, ShaderProgram& program) {
 }
 
 void Shooter::update(int deltaTime) {
-    int mapX = (int)position.x - 32;
-    int mapY = (int)position.y - 16;
+    int mapX = (int)position.x;
+    int mapY = (int)position.y;
     bool shouldTurn = false;
 
     // --- 1. IDLE LOGIC ---
@@ -72,7 +72,7 @@ void Shooter::update(int deltaTime) {
         position.x += moveRight ? speed : -speed;
     }
 
-    sprite->setPosition(position);
+    this->setPosition(position);
     sprite->update(deltaTime);
 }
 
@@ -94,7 +94,8 @@ void Shooter::Shoot(int deltaTime, ShaderProgram& program) {
 
         Bullet* bullet = new Bullet();
         // Spawn slightly in front of Mr. Krabs
-        glm::vec2 spawnPos = position + glm::vec2(8, 8);
+        glm::vec2 spawnPos = glm::vec2(position.x + tileMapDispl.x + (moveRight ? 24 : 0),
+            position.y + tileMapDispl.y + 12);
 
         bullet->init(spawnPos, program, moveRight);
 

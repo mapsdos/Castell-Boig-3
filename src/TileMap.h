@@ -16,6 +16,14 @@ enum TileType {
 	KEY = 5
 };
 
+enum class AICommand { MOVE_LEFT, MOVE_RIGHT, CLIMB_UP, CLIMB_DOWN, FALL, TRANSPORT };
+
+struct PathStep {
+	AICommand command;
+	float distance; // How many pixels to travel for this specific command
+	glm::vec2 targetPoint; // The final destination of this step for snapping
+};
+
 
 // Class Tilemap is capable of loading a tile map from a text file in a very
 // simple format (see level01.txt for an example). With this information
@@ -51,6 +59,8 @@ public:
 	std::map<char, std::vector<glm::vec2>> const & getPositionsOfStairs() const;
 
 	vector<string> const & getRoomFiles() const;
+
+	std::vector<PathStep> getPath(glm::vec2 posE, glm::vec2 posP);
 
 	bool hasFloorAt(const glm::ivec2& pixelPos) const;
 	
