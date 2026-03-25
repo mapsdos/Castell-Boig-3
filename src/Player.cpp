@@ -404,6 +404,11 @@ void Player::render(const glm::mat4& modelview)
 		heartSprites[i]->render(identity);
 }
 
+void Player::startDoorEnterAnimation()
+{
+	sprite->changeAnimation(ENTER);
+}
+
 void Player::setTileMap(TileMap* tileMap) { map = tileMap; }
 
 void Player::setPosition(const glm::vec2& pos)

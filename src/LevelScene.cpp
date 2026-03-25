@@ -151,6 +151,35 @@ void LevelScene::update(int deltaTime)
 {
 	currentTime += deltaTime;
 
+	if (enteringDoor)
+	{
+		player->getSprite()->update(deltaTime);   // animation keeps playing
+		enterAnimTimer += deltaTime;
+
+		if (enterAnimTimer >= ENTER_ANIM_DURATION && pendingDoor != nullptr)
+		{
+			// Animation finished → do the actual scene transition
+			LevelScene* targetScene = pendingDoor->getRoom();
+
+			pendingDoor->setOpened(true);
+			targetScene->setPlayer(this->player);
+			targetScene->doors[doorNum]->setOpened(true);
+			this->player->setTileMap(targetScene->getMap());
+
+			glm::vec2 doorPos = targetScene->findDoorPosition(doorNum);
+			player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
+
+			targetScene->setCooldown();
+			Game::instance().setScene(targetScene);
+
+			// Reset state for when we return to this scene later
+			enteringDoor = false;
+			enterAnimTimer = 0.f;
+			pendingDoor = nullptr;
+		}
+		return; // everything else is frozen
+	}
+	 
 	if (stairCooldown > 0)
 		stairCooldown -= deltaTime;
 
@@ -163,35 +192,24 @@ void LevelScene::update(int deltaTime)
 	float pB = playerWorldY + 28;
 
 	// 2. Check Doors (Room Transitions)
-	for (Door* d : doors) {
+	for (Door* d : doors)
+	{
 		float dL = d->getPosition().x;
 		float dR = dL + 32;
 		float dT = d->getPosition().y;
 		float dB = dT + 32;
 
-		if (pL < dR && pR > dL && pT < dB && pB > dT) {
-			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0) {
-				LevelScene* targetScene = d->getRoom();
-				if (targetScene != nullptr) {
-					d->setOpened(true);
-
-					// 1. Give the player to the next scene so it can be rendered there
-					targetScene->setPlayer(this->player);
-					targetScene->doors[doorNum]->setOpened(true);
-
-					// 2. CRITICAL: Update the player's internal collision pointer
-					// targetScene->getMap() returns the TileMap object of the new room
-					this->player->setTileMap(targetScene->getMap());
-
-					// 3. Teleport the player to the door's coordinates in the new map
-					glm::vec2 doorPos = targetScene->findDoorPosition(doorNum);
-					player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
-
-					targetScene->setCooldown();
-
-					// 4. Tell the Game to switch the active Scene
-					Game::instance().setScene(targetScene);
-
+		if (pL < dR && pR > dL && pT < dB && pB > dT)
+		{
+			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0)
+			{
+				if (d->getRoom() != nullptr)
+				{
+					// Start the animation and freeze — transition happens above
+					pendingDoor = d;
+					enteringDoor = true;
+					enterAnimTimer = 0.f;
+					player->startDoorEnterAnimation();
 					return;
 				}
 			}
