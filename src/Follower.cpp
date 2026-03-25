@@ -3,7 +3,6 @@
 
 void Follower::init(const glm::vec2& pos, ShaderProgram& program) {
     Enemy::init(pos, program);
-    speed = 0.05f; // Ensure speed is initialized
     timer = 0;
 
     spritesheet.loadFromFile("assets/images/plankton-png.png", TEXTURE_PIXEL_FORMAT_RGBA);
@@ -22,36 +21,35 @@ void Follower::update(int deltaTime) {
 }
 
 // 2. THE ACTUAL LOGIC
-
 void Follower::update(int deltaTime, const glm::vec2& playerPos) {
-    // 1. Path Management
+    // PATH MANAGEMENT: Update path every 500ms
     timer -= deltaTime;
     if (pathSequence.empty() || timer <= 0) {
+        // Use centers for pathfinding logic
         glm::vec2 feetPos = glm::vec2(position.x + 16, position.y + 24);
         glm::vec2 playerFeet = glm::vec2(playerPos.x + 16, playerPos.y + 16);
-        pathSequence = map->getPath(feetPos, playerFeet);
-        timer = 500; // Fixed: Use '=' not '=='
-        // cout << position.x << " " << position.y << "\n";
-    }
 
-    // 2. Gravity Logic
-    if (!pathSequence.empty()) {
-        AICommand cmd = pathSequence.front().command;
-        // Only apply gravity if we are moving horizontally or explicitly falling.
-        // DO NOT apply it during CLIMB or TRANSPORT, or he will sink/float.
-        if (cmd == AICommand::MOVE_LEFT || cmd == AICommand::MOVE_RIGHT || cmd == AICommand::FALL) {
-            applyGravity();
+        pathSequence = map->getPath(feetPos, playerFeet);
+        timer = 500;
+    }
+    
+    // 1. Update the Brain
+    updateFSM(playerPos, pathSequence);
+
+    // 2. Execute Behavior
+    if (currentState == EnemyState::TRACK)
+    {
+        // MOVEMENT: Follow the A* path
+        if (!pathSequence.empty()) {
+            followPath(deltaTime);
         }
     }
-    else {
-        // If no path exists, he should still fall to the nearest floor
-        applyGravity();
+    else if (currentState == EnemyState::EXPLORE) {
+        velocity *= 0.9f; // Slow down to a stop if not tracking
+        position += velocity * (float)deltaTime;
     }
 
-    // 3. AI Movement
-    followPath(deltaTime);
-
-    // 4. Finalize
+    // 3. Finalize
     this->setPosition(position);
     sprite->update(deltaTime);
 }
@@ -60,82 +58,64 @@ void Follower::followPath(int deltaTime) {
     if (pathSequence.empty()) return;
 
     PathStep& current = pathSequence.front();
-    float moveAmount = speed * deltaTime;
-    int intPosY;
+    glm::vec2 targetDir = current.targetPoint - this->position;
+    float length = glm::length(targetDir);
 
-    // 1. Execute Command
-    switch (current.command) {
-    case AICommand::MOVE_LEFT:
-        position.x -= moveAmount;
-        break;
-    case AICommand::MOVE_RIGHT:
-        position.x += moveAmount;
-        break;
-    case AICommand::CLIMB_UP:
-        position.y -= moveAmount;
-        break;
-    case AICommand::CLIMB_DOWN:
-        // Prevent clipping: if floor is hit, stop immediately
-        if (map->collisionMoveDown(glm::ivec2(position.x + 8, position.y + moveAmount), glm::vec2(16, 32), &intPosY)) {
-            position.y = (float)intPosY;
-            current.distance = 0;
+    // 1. Direction & Acceleration
+    if (length > 1.0f) {
+        targetDir /= length;
+        float factor = 0.005f;
+
+        // Accelerate faster if falling
+        if (current.command == AICommand::FALL) factor = 0.01f;
+
+        velocity.x += factor * targetDir.x * deltaTime;
+        velocity.y += factor * targetDir.y * deltaTime;
+
+        // 2. Cap velocity (Allow higher speed for falling)
+        float currentMax = MAX_VEL;
+        if (current.command == AICommand::FALL) currentMax = MAX_VEL * 3.0f; 
+
+        if (glm::length(velocity) > currentMax) {
+            velocity = glm::normalize(velocity) * currentMax;
         }
-        else {
-            position.y += moveAmount;
-        }
-        break;
-    case AICommand::FALL:
-    {
-        // Horizontal nudge to clear ledges
-        float diffX = current.targetPoint.x - position.x;
-        if (abs(diffX) > 1.0f) {
-            position.x += (diffX > 0 ? 1 : -1) * moveAmount;
-        }
-        // Vertical completion handled by targetPoint check below
-        break;
-    }
-    case AICommand::TRANSPORT:
-        this->setPosition(current.targetPoint);
-        pathSequence.erase(pathSequence.begin());
-        return; // Exit immediately after teleport
     }
 
-    // 2. Update Progress
-    current.distance -= moveAmount;
+    // 3. Apply position
+    this->position += velocity * (float)deltaTime;
 
-    // 3. Smooth Transition Check
-    // Instead of snapping, we check if we've passed or reached the target coordinate
-    bool reached = false;
-    if (current.command == AICommand::MOVE_LEFT && position.x <= current.targetPoint.x) reached = true;
-    else if (current.command == AICommand::MOVE_RIGHT && position.x >= current.targetPoint.x) reached = true;
-    else if (current.command == AICommand::CLIMB_UP && position.y <= current.targetPoint.y) reached = true;
-    else if (current.command == AICommand::CLIMB_DOWN && position.y >= current.targetPoint.y) reached = true;
-    else if (current.command == AICommand::FALL && position.y >= current.targetPoint.y) reached = true;
-    else if (current.distance <= 0) reached = true;
+    // 4. Grounding Check (The "Safety Net")
+    // If we are moving down and getting close to the target block
+    if (current.command == AICommand::FALL || current.command == AICommand::CLIMB_DOWN) {
+        // 1. Calculate where he WILL be after this frame's movement
+        float nextY = position.y + (velocity.y * (float)deltaTime);
 
-    if (reached) {
-        // Only snap if the difference is tiny (< 2px) to keep it looking smooth
-        if (glm::distance(position, current.targetPoint) < 2.0f) {
-            position = current.targetPoint;
+        if (length < 64.0f) {
+            int intPosY;
+            // 2. Check collision at the NEXT Y position, not the current one
+            if (map->collisionMoveDown(glm::ivec2(position.x + 4, nextY), glm::ivec2(32, 32), &intPosY)) {
+
+                this->position.y = (float)intPosY; // Snap to the floor top
+                velocity.y = 0;                    // Kill momentum
+
+                // 3. Mark as arrived so the path step is erased
+                pathSequence.erase(pathSequence.begin());
+                velocity = glm::vec2(0, 0);
+                return; // Skip the standard position += velocity at the bottom
+            }
+        }
+    }
+
+    // 5. Check for Arrival
+    if (length < 2.0f || (current.command == AICommand::TRANSPORT)) {
+        if (current.command == AICommand::TRANSPORT) {
+            this->setPosition(current.targetPoint);
         }
         pathSequence.erase(pathSequence.begin());
-    }
-}
 
-void Follower::applyGravity() {
-    // 1. Vine Safety Check
-    int tileAtCenter = map->getTileIdAt(glm::ivec2(position.x + 16, position.y + 16));
-    if (tileAtCenter == 3) return;
-
-    float FALL_STEP = 2.0f;
-    int intPosY;
-
-    // 2. Check if there is floor JUST below us
-    // Narrow the collision width (position.x + 12, width 8) so he falls off ledges easier
-    if (map->collisionMoveDown(glm::ivec2(position.x + 12, position.y + FALL_STEP), glm::ivec2(8, 32), &intPosY)) {
-        position.y = (float)intPosY; // Snap to floor
-    }
-    else {
-        position.y += FALL_STEP; // Actually move down in the air
+        // Stop all movement if switching modes to prevent the "sliding" clip
+        if (!pathSequence.empty() && pathSequence.front().command != current.command) {
+            velocity = glm::vec2(0, 0);
+        }
     }
 }

@@ -14,6 +14,7 @@ public:
 
     glm::vec2 getPosition() const { return position; }
     virtual void setPosition(const glm::vec2 &pos);
+    
 
 protected:
     glm::vec2 position;

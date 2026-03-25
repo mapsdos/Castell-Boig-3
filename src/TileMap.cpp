@@ -3,10 +3,18 @@
 #include <sstream>
 #include <vector>
 #include <queue>
+#include <limits>
 #include "TileMap.h"
 
+struct AStarNode {
+	int index;
+	float fCost; // gCost + hCost
 
-using namespace std;
+	// Priority queue is a max-heap, so we flip the comparison to make it a min-heap
+	bool operator>(const AStarNode& other) const {
+		return fCost > other.fCost;
+	}
+};
 
 
 TileMap *TileMap::createTileMap(const string &levelFile, const glm::vec2 &minCoords, ShaderProgram &program)
@@ -265,9 +273,7 @@ vector<string> const & TileMap::getRoomFiles() const
 	return roomFiles;
 }
 
-std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP)
-{
-	// 1. Convert pixel positions to Tile coordinates
+std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP) {
 	int startX = static_cast<int>(posE.x / tileSize);
 	int startY = static_cast<int>(posE.y / tileSize);
 	int targetX = static_cast<int>(posP.x / tileSize);
@@ -275,168 +281,125 @@ std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP)
 
 	if (startX < 0 || startX >= mapSize.x || startY < 0 || startY >= mapSize.y ||
 		targetX < 0 || targetX >= mapSize.x || targetY < 0 || targetY >= mapSize.y) {
-		return {}; // Return empty path if anyone is outside the map
+		return {};
 	}
 
 	int startIdx = startY * mapSize.x + startX;
 	int targetIdx = targetY * mapSize.x + targetX;
-
 	if (startIdx == targetIdx) return {};
 
-	std::queue<int> nxtPos;
-	std::vector<int> parent(mapSize.x * mapSize.y, -1); // To reconstruct path
-	std::vector<bool> visited(mapSize.x * mapSize.y, false);
+	// A* Data Structures
+	std::priority_queue<AStarNode, std::vector<AStarNode>, std::greater<AStarNode>> openSet;
+	std::vector<float> gCost(mapSize.x * mapSize.y, (std::numeric_limits<float>::max)());
+	std::vector<int> parent(mapSize.x * mapSize.y, -1);
 
-	nxtPos.push(startIdx);
-	visited[startIdx] = true;
+	// Initial Node
+	gCost[startIdx] = 0;
+	float hStart = (float)(abs(startX - targetX) + abs(startY - targetY)); // Manhattan
+	openSet.push({ startIdx, hStart });
 
 	bool found = false;
-	int rec = 0;
-	while (!nxtPos.empty() && rec < 10000)
-	{
-		rec++;
-		int curr = nxtPos.front();
-		nxtPos.pop();
+	int iterations = 0;
+
+	while (!openSet.empty() && iterations < 10000) {
+		iterations++;
+		int curr = openSet.top().index;
+		openSet.pop();
 
 		if (curr == targetIdx) {
 			found = true;
 			break;
 		}
 
-		std::vector<int> neighbors;
-		int tileVal = map[curr];
 		int x = curr % mapSize.x;
 		int y = curr / mapSize.x;
+		int tileVal = map[curr];
 
-		// 1. Check for floor existence
-		bool hasFloorBelow = false;
+		// --- ENEMY MOVEMENT RULES (Your Original Logic) ---
+		std::vector<int> neighbors;
 		int downIdx = curr + mapSize.x;
-		if (downIdx < mapSize.x * mapSize.y) {
-			// We consider it a "floor" if the tile below is a wall (1) or another vine (3)
-			if (map[downIdx] == 1 || map[downIdx] == 3) {
-				hasFloorBelow = true;
-			}
+		bool hasFloorBelow = (downIdx < mapSize.x * mapSize.y) && (map[downIdx] == 1 || map[downIdx] == 3);
+
+		if (tileVal == 3) { // Vine logic
+			if (y > 0) neighbors.push_back(curr - mapSize.x);
+			if (downIdx < mapSize.x * mapSize.y) neighbors.push_back(downIdx);
 		}
 
-		// 2. Priority Logic
-
-		// CONDITION: IF ON VINE (3rd Priority)
-		// Vines allow free vertical movement regardless of floors
-		if (tileVal == 3) {
-			// Up
-			if (y > 0) {
-				int up = curr - mapSize.x;
-				if (map[up] == 3 || map[up] == 0) neighbors.push_back(up);
-			}
-			// Down
-			if (downIdx < mapSize.x * mapSize.y) {
-				if (map[downIdx] == 3 || map[downIdx] == 0 || map[downIdx] == 1) neighbors.push_back(downIdx);
-			}
-		}
-
-		// CONDITION: FLOOR vs FALLING (1st & 2nd Priority)
-		if (hasFloorBelow || tileVal == 3) {
-			// If on a floor (or vine), he can move Left & Right
+		if (hasFloorBelow || tileVal == 3) { // Walking logic
 			if (x > 0) neighbors.push_back(curr - 1);
 			if (x < mapSize.x - 1) neighbors.push_back(curr + 1);
 		}
-		else {
-			// No floor and not on a vine: MUST fall down. 
-			// We don't add Left/Right here, so the path is forced straight down.
-			if (downIdx < mapSize.x * mapSize.y) {
-				neighbors.push_back(downIdx);
-			}
+		else if (downIdx < mapSize.x * mapSize.y) { // Forced Fall logic
+			neighbors.push_back(downIdx);
 		}
 
-		// CONDITION: STAIRS (4th Priority)
-		if (tileVal >= 'a' && tileVal <= 'z') {
-			char stairChar = (char)tileVal;
-			const std::vector<glm::vec2>& pair = positions.at(stairChar);
-			for (const glm::vec2& p : pair) {
+		if (tileVal >= 'a' && tileVal <= 'z') { // Stairs logic
+			for (const glm::vec2& p : positions.at((char)tileVal)) {
 				int stairIdx = (int)p.y * mapSize.x + (int)p.x;
 				if (stairIdx != curr) neighbors.push_back(stairIdx);
 			}
 		}
 
-		// Final validation and push to queue
+		// --- A* COST CALCULATION ---
 		for (int next : neighbors) {
-			// Ensure we don't walk into walls (1) and haven't visited this tile
-			if (!visited[next] && map[next] != 1) {
-				visited[next] = true;
+			if (map[next] == 1) continue; // Wall check
+
+			float tentativeGCost = gCost[curr] + 1.0f; // Each tile step costs 1
+
+			if (tentativeGCost < gCost[next]) {
 				parent[next] = curr;
-				nxtPos.push(next);
+				gCost[next] = tentativeGCost;
+
+				// h(N): Manhattan distance to target
+				float hNext = (float)(abs((next % mapSize.x) - targetX) +
+					abs((next / mapSize.x) - targetY));
+
+				openSet.push({ next, gCost[next] + hNext });
 			}
 		}
 	}
 
-	// 3. Reconstruct the path from target back to start
+	// --- RECONSTRUCTION (Restored your specific logic) ---
 	std::vector<PathStep> sequence;
 	if (found) {
 		std::vector<int> indices;
-		int currIdx = targetIdx;
-		while (currIdx != -1) {
-			indices.push_back(currIdx);
-			currIdx = parent[currIdx];
-		}
+		for (int c = targetIdx; c != -1; c = parent[c]) indices.push_back(c);
 		std::reverse(indices.begin(), indices.end());
 
-		// Inside the reconstruction loop of TileMap::getPath
 		for (size_t i = 0; i < indices.size() - 1; ++i) {
-			int from = indices[i];
-			int to = indices[i + 1];
-
-			int x1 = from % mapSize.x;
-			int y1 = from / mapSize.x;
-			int x2 = to % mapSize.x;
-			int y2 = to / mapSize.x;
+			int from = indices[i], to = indices[i + 1];
+			int x1 = from % mapSize.x, y1 = from / mapSize.x;
+			int x2 = to % mapSize.x, y2 = to / mapSize.x;
 
 			PathStep step;
-
-			// Dimension Correction:
-			// To center Plankton's lower 24px wide area on a 16px tile:
-			// X: (x * 16) + (16/2) - (24/2) = (x * 16) - 4
-			// Y: (y * 16) + 16 (bottom of tile) - 32 (height of sprite) = (y * 16) - 16
+			// Your exact -4, -16 offset for centering
 			step.targetPoint = glm::vec2((x2 * tileSize) - 4.0f, (y2 * tileSize) - 16.0f);
-
 			step.distance = (float)tileSize;
 
-			// Use absolute tile coordinate differences for stair detection
-			int xDiff = abs(x2 - x1);
-			int yDiff = abs(y2 - y1);
-
-			// 1. STAIR CASE (Restored your original check)
-			if (xDiff > 1 || yDiff > 1) {
+			if (abs(x2 - x1) > 1 || abs(y2 - y1) > 1) { // STAIRS
 				step.command = AICommand::TRANSPORT;
-				step.distance = 0;
-				// For transport, we must use your specific door/stair offset
 				step.targetPoint = glm::vec2(x2 * tileSize, (y2 * tileSize) - 16.0f);
+				step.distance = 0;
 			}
-			// 2. VERTICAL MOVEMENT
 			else if (y2 > y1) {
-				if (map[to] == 3 || map[from] == 3) {
-					step.command = AICommand::CLIMB_DOWN;
-				}
-				else {
-					step.command = AICommand::FALL;
-					// Restored your specific fall distance multiplier
-					step.distance = (float)tileSize * 1.2f;
-				}
+				step.command = (map[to] == 3 || map[from] == 3) ? AICommand::CLIMB_DOWN : AICommand::FALL;
+				if (step.command == AICommand::FALL) step.distance = (float)tileSize * 1.2f;
 			}
 			else if (y2 < y1) {
 				step.command = AICommand::CLIMB_UP;
 			}
-			// 3. HORIZONTAL MOVEMENT
-			else if (x2 > x1) step.command = AICommand::MOVE_RIGHT;
-			else if (x2 < x1) step.command = AICommand::MOVE_LEFT;
-
+			else if (x2 > x1) {
+				step.command = AICommand::MOVE_RIGHT;
+			}
+			else if (x2 < x1) {
+				step.command = AICommand::MOVE_LEFT;
+			}
 			sequence.push_back(step);
 		}
+		if (!sequence.empty()) {
+			sequence.back().targetPoint = glm::vec2(posP.x - 16.0f, posP.y - 16.0f);
+		}
 	}
-	for (auto ps : sequence)
-	{
-		cout << ps.targetPoint.x << " " << ps.targetPoint.y << " " << (ps.command == AICommand::TRANSPORT) << "\n";
-	}
-	cout << "\n";
 	return sequence;
 }
 

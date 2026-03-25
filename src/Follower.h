@@ -10,9 +10,7 @@ public:
 	void update(int deltaTime) override;
 	void update(int deltaTime, const glm::vec2& playerPos);
 	void followPath(int deltaTime);
-	void applyGravity();
 private:
-	float speed = 0.08f;
 	int timer;
 	std::vector<PathStep> pathSequence;
 };
