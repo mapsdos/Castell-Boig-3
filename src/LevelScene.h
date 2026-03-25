@@ -40,6 +40,10 @@ private:
 	float stairCooldown = 0.0f;
 	const float STAIR_DELAY = 100.0f;
 	int doorNum;
+	bool   enteringDoor = false;
+	float  enterAnimTimer = 0.f;
+	const float ENTER_ANIM_DURATION = 375.f; // 3 frames × (1000/8) ms
+	Door* pendingDoor = nullptr;
 };
 
 #endif

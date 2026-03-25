@@ -151,6 +151,35 @@ void LevelScene::update(int deltaTime)
 {
 	currentTime += deltaTime;
 
+	if (enteringDoor)
+	{
+		player->getSprite()->update(deltaTime);   // animation keeps playing
+		enterAnimTimer += deltaTime;
+
+		if (enterAnimTimer >= ENTER_ANIM_DURATION && pendingDoor != nullptr)
+		{
+			// Animation finished → do the actual scene transition
+			LevelScene* targetScene = pendingDoor->getRoom();
+
+			pendingDoor->setOpened(true);
+			targetScene->setPlayer(this->player);
+			targetScene->doors[doorNum]->setOpened(true);
+			this->player->setTileMap(targetScene->getMap());
+
+			glm::vec2 doorPos = targetScene->findDoorPosition(doorNum);
+			player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
+
+			targetScene->setCooldown();
+			Game::instance().setScene(targetScene);
+
+			// Reset state for when we return to this scene later
+			enteringDoor = false;
+			enterAnimTimer = 0.f;
+			pendingDoor = nullptr;
+		}
+		return; // everything else is frozen
+	}
+	 
 	if (stairCooldown > 0)
 		stairCooldown -= deltaTime;
 
@@ -163,35 +192,31 @@ void LevelScene::update(int deltaTime)
 	float pB = playerWorldY + 28;
 
 	// 2. Check Doors (Room Transitions)
-	for (Door* d : doors) {
-		float dL = d->getPosition().x;
-		float dR = dL + 32;
-		float dT = d->getPosition().y;
-		float dB = dT + 32;
+	for (Door* d : doors)
+	{
+		// Centro del jugador
+		float pCenterX = player->getPosition().x + SCREEN_X + 12.f; // 12 = mitad de 24px
+		float pCenterY = player->getPosition().y + SCREEN_Y + 16.f; // 16 = mitad de 32px
 
-		if (pL < dR && pR > dL && pT < dB && pB > dT) {
-			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0) {
-				LevelScene* targetScene = d->getRoom();
-				if (targetScene != nullptr) {
-					d->setOpened(true);
+		// Centro de la puerta
+		float dCenterX = d->getPosition().x + 16.f;
+		float dCenterY = d->getPosition().y + 16.f;
 
-					// 1. Give the player to the next scene so it can be rendered there
-					targetScene->setPlayer(this->player);
-					targetScene->doors[doorNum]->setOpened(true);
+		float distX = abs(pCenterX - dCenterX);
+		float distY = abs(pCenterY - dCenterY);
 
-					// 2. CRITICAL: Update the player's internal collision pointer
-					// targetScene->getMap() returns the TileMap object of the new room
-					this->player->setTileMap(targetScene->getMap());
-
-					// 3. Teleport the player to the door's coordinates in the new map
-					glm::vec2 doorPos = targetScene->findDoorPosition(doorNum);
-					player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
-
-					targetScene->setCooldown();
-
-					// 4. Tell the Game to switch the active Scene
-					Game::instance().setScene(targetScene);
-
+		// Solo activa si el jugador está muy cerca en X e Y
+		// Ajusta estos valores si sigue siendo demasiado amplio o estrecho
+		if (distX < 12.f && distY < 14.f)
+		{
+			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0)
+			{
+				if (d->getRoom() != nullptr)
+				{
+					pendingDoor = d;
+					enteringDoor = true;
+					enterAnimTimer = 0.f;
+					player->startDoorEnterAnimation();
 					return;
 				}
 			}
