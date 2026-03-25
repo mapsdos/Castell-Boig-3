@@ -13,7 +13,8 @@ enum TileType {
 	STAIRS = 2,
 	VINES = 3,
 	DOOR = 4,
-	KEY = 5
+	KEY = 5,
+	JUMP = 6
 };
 
 enum class AICommand { MOVE_LEFT, MOVE_RIGHT, CLIMB_UP, CLIMB_DOWN, FALL, TRANSPORT };

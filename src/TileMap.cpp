@@ -150,6 +150,10 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 				break;
 			default:
 			{
+				if (tile == 6)
+				{
+					tile = 2;
+				}
 				// Non-empty tile
 				nTiles++;
 				posTile = glm::vec2(minCoords.x + i * tileSize, minCoords.y + j * tileSize);
