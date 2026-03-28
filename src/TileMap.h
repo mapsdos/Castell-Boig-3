@@ -17,7 +17,7 @@ enum TileType {
 	JUMP = 6
 };
 
-enum class AICommand { MOVE_LEFT, MOVE_RIGHT, CLIMB_UP, CLIMB_DOWN, FALL, TRANSPORT };
+enum class AICommand { MOVE_LEFT, MOVE_RIGHT, CLIMB_UP, CLIMB_DOWN, FALL, TRANSPORT , ASCEND, FALL_RIGHT, FALL_LEFT};
 
 struct PathStep {
 	AICommand command;
@@ -52,6 +52,7 @@ public:
 	bool collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const;
+	bool collisionMoveUp(const glm::ivec2& pos, const glm::ivec2& size, int* posY) const;
 
 	int getTileIdAt(const glm::ivec2& pos) const;
 

@@ -32,12 +32,12 @@ public:
 private:
 	void handleClimbing();
 	bool handleHorizontalMovement();
-	void updateJumpLogic(bool moving);
+	void updateFloatingLogic();
 	void updateGravityLogic(bool moving);
 	void updateGodModeLogic(int deltaTime);
 
 private:
-	bool bJumping;
+	bool bFloating = false;
 	glm::ivec2 tileMapDispl, posPlayer;
 	int jumpAngle, startY;
 	Texture spritesheet;
