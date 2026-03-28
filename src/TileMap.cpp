@@ -235,9 +235,29 @@ bool TileMap::collisionMoveDown(const glm::ivec2& pos, const glm::ivec2& size, i
 	y = (pos.y + size.y - 1) / tileSize;
 	for (int x = x0; x <= x1; x++)
 	{
-		if (map[y * mapSize.x + x] == 1)
+		if (map[y * mapSize.x + x] == 1 || map[y * mapSize.x + x] == 6)
 		{
 			*posY = tileSize * y - size.y;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool TileMap::collisionMoveUp(const glm::ivec2& pos, const glm::ivec2& size, int* posY) const
+{
+	int x0, x1, y;
+
+	x0 = pos.x / tileSize;
+	x1 = (pos.x + size.x - 1) / tileSize;
+	y = pos.y / tileSize; // Look at the top row of tiles
+	for (int x = x0; x <= x1; x++)
+	{
+		if (map[y * mapSize.x + x] == 1) // If it's a solid block
+		{
+			if (posY != nullptr)
+				*posY = tileSize * (y + 1); // Snap to the bottom of that tile
 			return true;
 		}
 	}
@@ -319,19 +339,59 @@ std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP) {
 		int y = curr / mapSize.x;
 		int tileVal = map[curr];
 
-		// --- ENEMY MOVEMENT RULES (Your Original Logic) ---
+		// --- ENEMY MOVEMENT RULES ---
 		std::vector<int> neighbors;
 		int downIdx = curr + mapSize.x;
-		bool hasFloorBelow = (downIdx < mapSize.x * mapSize.y) && (map[downIdx] == 1 || map[downIdx] == 3);
 
-		if (tileVal == 3) { // Vine logic
-			if (y > 0) neighbors.push_back(curr - mapSize.x);
-			if (downIdx < mapSize.x * mapSize.y) neighbors.push_back(downIdx);
+		// Ensure we don't crash if we are at the bottom of the map
+		bool validDown = (downIdx < mapSize.x * mapSize.y);
+
+		// 1. Standable Surfaces (Floor, Vine, or Jump Pad)
+		bool hasFloorBelow = validDown && (map[downIdx] == 1 || map[downIdx] == 3 || map[downIdx] == 6);
+
+		// 2. TRIGGER THE JUMP (If standing on 6 OR the tile below is 6)
+		// We check map[curr] == 6 for the float, and map[downIdx] == 6 to start the float
+		if ((tileVal == 6 || (validDown && map[downIdx] == 6)) && targetY < y) {
+			for (int checkY = y - 1; checkY >= 0; checkY--) {
+				if (map[checkY * mapSize.x + x] == 1) break; // Ceiling hit
+
+				for (int dx = -2; dx <= 2; dx += 4) {
+					int targetX = x + dx;
+					if (targetX < 0 || targetX >= mapSize.x) continue;
+
+					int targetIdx = checkY * mapSize.x + targetX;
+					int belowTargetIdx = (checkY + 1) * mapSize.x + targetX;
+
+					if (belowTargetIdx < mapSize.x * mapSize.y) {
+						// Landing Check
+						if (map[targetIdx] != 1 && map[belowTargetIdx] == 1) {
+							neighbors.push_back(targetIdx);
+						}
+					}
+				}
+			}
 		}
 
 		if (hasFloorBelow || tileVal == 3) { // Walking logic
-			if (x > 0) neighbors.push_back(curr - 1);
-			if (x < mapSize.x - 1) neighbors.push_back(curr + 1);
+			if (x > 0)
+			{
+				neighbors.push_back(curr - 1);
+			}
+			if (x < mapSize.x - 1)
+			{
+				neighbors.push_back(curr + 1);
+			}
+			if (tileVal == 3)
+			{
+				if (y > 0)
+				{
+					neighbors.push_back(curr - mapSize.x);
+				}
+				if (y < mapSize.y)
+				{
+					neighbors.push_back(curr + mapSize.x);
+				}
+			}
 		}
 		else if (downIdx < mapSize.x * mapSize.y) { // Forced Fall logic
 			neighbors.push_back(downIdx);
@@ -346,9 +406,17 @@ std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP) {
 
 		// --- A* COST CALCULATION ---
 		for (int next : neighbors) {
-			if (map[next] == 1) continue; // Wall check
+			if (map[next] == 1) continue;
 
-			float tentativeGCost = gCost[curr] + 1.0f; // Each tile step costs 1
+			float moveCost = 1.0f;
+
+			// If this move is a "Jump" (Y difference is large), make it very attractive
+			int nextY = next / mapSize.x;
+			if (abs(nextY - y) > 1) {
+				moveCost = 0.5f; // Jump "costs" less than walking to encourage taking it
+			}
+
+			float tentativeGCost = gCost[curr] + moveCost;
 
 			if (tentativeGCost < gCost[next]) {
 				parent[next] = curr;
@@ -380,25 +448,45 @@ std::vector<PathStep> TileMap::getPath(glm::vec2 posE, glm::vec2 posP) {
 			step.targetPoint = glm::vec2((x2 * tileSize) - 4.0f, (y2 * tileSize) - 16.0f);
 			step.distance = (float)tileSize;
 
-			if (abs(x2 - x1) > 1 || abs(y2 - y1) > 1) { // STAIRS
+			if (map[from + mapSize.x] == 6 && y2 < y1) {
+				PathStep floatStep;
+				floatStep.command = AICommand::ASCEND;
+
+				// TARGET: Current X, but the Y needs to be HIGHER than the destination.
+				// Let's go 2 full tiles above the landing spot to be safe.
+				floatStep.targetPoint = glm::vec2((x1 * tileSize), (y2 * tileSize) - (tileSize * 2.0f));
+				sequence.push_back(floatStep);
+
+				// Prepare the horizontal 'step-in'
+				step.command = (x2 > x1) ? AICommand::FALL_RIGHT : AICommand::FALL_LEFT;
+				// Set landing target slightly inside the tile so he doesn't slip off
+				step.targetPoint = glm::vec2((x2 * tileSize) - 4.0f, (y2 * tileSize) - 32.0f);
+				// cout << (floatStep.command == AICommand::ASCEND) << " " << floatStep.distance << " " << floatStep.targetPoint.x << " " << floatStep.targetPoint.y << '\n';
+			}
+			// 2. FALLING / CLIMB DOWN
+			else if (abs(x2 - x1) > 1 || abs(y2 - y1) > 1) {
 				step.command = AICommand::TRANSPORT;
 				step.targetPoint = glm::vec2(x2 * tileSize, (y2 * tileSize) - 16.0f);
 				step.distance = 0;
 			}
+			// 3. STAIRS / LONG DISTANCE
 			else if (y2 > y1) {
 				step.command = (map[to] == 3 || map[from] == 3) ? AICommand::CLIMB_DOWN : AICommand::FALL;
 				if (step.command == AICommand::FALL) step.distance = (float)tileSize * 1.2f;
+				step.targetPoint = glm::vec2((x2 * tileSize) - 4.0f, (y2 * tileSize) - 16.0f);
 			}
+			// 4. CLIMBING UP (Vines)
 			else if (y2 < y1) {
 				step.command = AICommand::CLIMB_UP;
+				step.targetPoint = glm::vec2((x2 * tileSize) - 4.0f, (y2 * tileSize) - 16.0f);
 			}
-			else if (x2 > x1) {
-				step.command = AICommand::MOVE_RIGHT;
-			}
-			else if (x2 < x1) {
-				step.command = AICommand::MOVE_LEFT;
+			// 5. HORIZONTAL MOVE
+			else {
+				step.command = (x2 > x1) ? AICommand::MOVE_RIGHT : AICommand::MOVE_LEFT;
+				step.targetPoint = glm::vec2((x2 * tileSize) - 4.0f, (y2 * tileSize) - 16.0f);
 			}
 			sequence.push_back(step);
+			// cout << (step.command==AICommand::TRANSPORT) << " " << step.distance << " " << step.targetPoint.x << " " << step.targetPoint.y << '\n';
 		}
 		if (!sequence.empty()) {
 			sequence.back().targetPoint = glm::vec2(posP.x - 16.0f, posP.y - 16.0f);
