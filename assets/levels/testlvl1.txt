@@ -1,10 +1,12 @@
 TILEMAP
-20 5                            -- Size of tile map in tiles
+20 7                            -- Size of tile map in tiles
 16 32 							-- Tile size & block size
 assets/images/blocks.png        -- Tilesheet
 0                               -- Number of doors.
 2 2                             -- Number of tiles in tilesheet
 11111111111111111111
+1                  1
+1                  1
 1                  1
 1                  1
 1 4            7   1

@@ -21,21 +21,23 @@ class LevelScene : public Scene
 {
 public:
 	LevelScene();
+	LevelScene(string setPath, Player* setPlayer);
 	~LevelScene();
 
 	// "override" tells the compiler these replace the base Scene versions
 	void init() override;
-	void init(string path);
 	void update(int deltaTime) override;
 	void render() override;
 	glm::vec2 findDoorPosition(int numDoor);
 	void setCooldown();
 	void setPlayer(Player* newPlayer);
 	TileMap* getMap() const { return map; }
-	void LoadEnemies();
 	void setDoorNum(int numDoor);
 
-	int numKeys();
+	int totalNumKeys();
+	void collectKeys();
+	int numKeys() { return keys.size(); };
+	void clearKeys() { keys.clear(); };
 	void addBullet(Bullet* bullet) { bulletsFired.push_back(bullet); };
 	void addBomb(Bomb* bomb) { bombsPlaced.push_back(bomb); };
 
@@ -59,6 +61,7 @@ private:
 	Door* pendingDoor = nullptr;
 	bool stoppedTime;
 	int timeStopped;
+	string path;
 };
 
 #endif

@@ -37,7 +37,7 @@ public:
 	void addBullet() { ++bullets; };
 	void addBomb() { ++bombs; };
 
-	void playerEvent(LevelScene* levelScene);
+	void playerEvent(LevelScene* levelScene, int deltaTime);
 
 private:
 	void handleClimbing();
@@ -63,6 +63,7 @@ private:
 	Sprite* heartSprites[3];
 
 	int bullets, bombs;
+	int actionTimer;
 
 	bool godMode = false;
 	bool godModeActivating = false;

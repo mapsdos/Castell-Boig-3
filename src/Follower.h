@@ -2,13 +2,14 @@
 #define _FOLLOWER_INCLUDE
 
 #include "Enemy.h"
+#include "Weight.h"
 
 class Follower : public Enemy
 {
 public:
 	void init(const glm::vec2& pos, ShaderProgram& program) override;
 	void update(int deltaTime) override;
-	void update(int deltaTime, const glm::vec2& playerPos);
+	void update(int deltaTime, const glm::vec2& playerPos, const std::vector<Weight*> weights);
 	void followPath(int deltaTime);
 private:
 

@@ -25,6 +25,7 @@
     <ClInclude Include="src\GraphicsConfig.h" />
     <ClInclude Include="src\InstructionsScene.h" />
     <ClInclude Include="src\Key.h" />
+    <ClInclude Include="src\KeyDoor.h" />
     <ClInclude Include="src\LevelScene.h" />
     <ClInclude Include="src\MenuScene.h" />
     <ClInclude Include="src\Patroller.h" />
@@ -53,6 +54,7 @@
     <ClCompile Include="src\Key.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\InstructionsScene.cpp" />
+    <ClCompile Include="src\KeyDoor.cpp" />
     <ClCompile Include="src\LevelScene.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuScene.cpp" />

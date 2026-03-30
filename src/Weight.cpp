@@ -3,6 +3,7 @@
 void Weight::init(const glm::vec2& pos, ShaderProgram& program)
 {
     position = pos;
+    fell = false;
     spritesheet.loadFromFile("assets/images/weight-pixel-art.png", TEXTURE_PIXEL_FORMAT_RGBA);
     sprite = Sprite::createSprite(glm::vec2(16, 16), glm::vec2(1.0f, 1.0f), &spritesheet, &program);
     sprite->setPosition(position);
@@ -38,6 +39,10 @@ void Weight::update(int deltaTime) {
     if (map->collisionMoveDown(glm::ivec2(mapPos.x, mapPos.y + 1), glm::ivec2(16, 16), &floorY)) {
         // Already on ground - snap and stop
         position.y = (float)floorY + 16;
+        if (fallVelocity > 0.f)
+        {
+            fell = true;
+        }
         fallVelocity = 0.0f;
     }
     else {
@@ -48,6 +53,7 @@ void Weight::update(int deltaTime) {
         if (map->collisionMoveDown(mapPos, glm::ivec2(16, 16), &floorY)) {
             position.y = (float)floorY + 16;
             fallVelocity = 0.0f;
+            fell = true;
         }
     }
 

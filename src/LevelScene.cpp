@@ -5,6 +5,7 @@
 #include "LevelScene.h"
 #include "Key.h"
 #include "Door.h"
+#include "KeyDoor.h"
 #include "Game.h"
 #include "Patroller.h"
 #include "Shooter.h"
@@ -24,6 +25,14 @@ LevelScene::LevelScene()
 	doorNum = 0;
 }
 
+LevelScene::LevelScene(string setPath, Player* setPlayer)
+{
+	map = NULL;
+	player = setPlayer;
+	doorNum = 0;
+	path = setPath;
+}
+
 LevelScene::~LevelScene()
 {
 	texProgram.free();
@@ -34,11 +43,6 @@ LevelScene::~LevelScene()
 }
 
 void LevelScene::init()
-{
-	init("assets/levels/level01.txt");
-}
-
-void LevelScene::init(string path)
 {
 	initShaders();
 	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
@@ -77,12 +81,12 @@ void LevelScene::init(string path)
 
 				if ( roomSize > 0) {
 					// Create a WHOLE NEW SCENE for the room
-					LevelScene* roomScene = new LevelScene();
-					roomScene->init(roomFiles.at(roomSize - 1)); // Custom init that takes a filename
+					LevelScene* roomScene = new LevelScene(roomFiles.at(roomSize - 1), player); // Custom init that takes a filename
+					roomScene->init();
 					roomScene->doors[0]->setRoom(this);
 					newDoor->setRoom(roomScene);
 					roomScene->enemies.clear();
-					roomScene->setDoorNum(roomFiles.size() - roomSize);
+					roomScene->setDoorNum(roomFiles.size() - roomSize + 1);
 
 					// IMPORTANT: The door inside the roomScene needs to point BACK to 'this'
 					// You'll need a logic to link them back to the current LevelScene
@@ -90,6 +94,15 @@ void LevelScene::init(string path)
 					--roomSize;
 				}
 				doors.push_back(newDoor);
+			}
+			else if (tileId == 10)
+			{
+				KeyDoor* newKeyDoor = new KeyDoor();
+				float x = SCREEN_X + (i * map->getTileSize());
+				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
+				newKeyDoor->init(glm::vec2(x, y), texProgram);
+
+				doors.insert(doors.begin(),newKeyDoor);
 			}
 			else if (tileId == 7)
 			{
@@ -125,13 +138,37 @@ void LevelScene::init(string path)
 				newClock->init(glm::vec2(x, y), texProgram);
 				items.push_back(newClock);
 			}
+			else if (tileId == 11)
+			{
+				Patroller* patroller = new Patroller();
+				patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+				patroller->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
+				patroller->setTileMap(map);
+				enemies.push_back(patroller);
+			}
+			else if (tileId == 12)
+			{
+				Shooter* shooter = new Shooter();
+				shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+				shooter->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
+				shooter->setTileMap(map);
+				enemies.push_back(shooter);
+			}
+			else if (tileId == 13)
+			{
+				Follower* follower = new Follower();
+				follower->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+				follower->setPosition(glm::vec2(i * map->getTileSize(), (j* map->getTileSize()) - (32 - map->getTileSize())));
+				follower->setTileMap(map);
+				enemies.push_back(follower);
+			}
 		}
 	}
 
 	// Get the pair of positions from the map
 	std::map<char,std::vector<glm::vec2>> const & stairPos = map->getPositionsOfStairs();
 
-	for(auto iter : stairPos) {
+	for (auto iter : stairPos) {
 		// 1. Convert tile coordinates to pixel coordinates
 		float x1 = SCREEN_X + (iter.second[0].x * map->getTileSize());
 		float y1 = SCREEN_Y + (iter.second[0].y * map->getTileSize()) - 15;
@@ -152,35 +189,11 @@ void LevelScene::init(string path)
 		stairs.push_back(stairB);
 	}
 
-	player = new Player();
 	player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(), INIT_PLAYER_Y_TILES * map->getTileSize()));
+	player->setPosition(glm::vec2(INIT_PLAYER_X_TILES* map->getTileSize(), INIT_PLAYER_Y_TILES* map->getTileSize()));
 	player->setTileMap(map);
 	projection = glm::ortho(0.f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.f);
 	currentTime = 0.0f;
-
-	LoadEnemies();
-}
-
-void LevelScene::LoadEnemies()
-{
-	Patroller* patroller = new Patroller();
-	patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	patroller->setPosition(glm::vec2((INIT_PLAYER_X_TILES) * map->getTileSize(), (INIT_PLAYER_Y_TILES) * map->getTileSize()));
-	patroller->setTileMap(map);
-	enemies.push_back(patroller);
-
-	Shooter* shooter= new Shooter();
-	shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	shooter->setPosition(glm::vec2((INIT_PLAYER_X_TILES) * map->getTileSize(), (INIT_PLAYER_Y_TILES) * map->getTileSize()));
-	shooter->setTileMap(map);
-	enemies.push_back(shooter);
-
-	Follower* follower = new Follower();
-	follower->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-	follower->setPosition(glm::vec2((INIT_PLAYER_X_TILES) * map->getTileSize(), (INIT_PLAYER_Y_TILES) * map->getTileSize()));
-	follower->setTileMap(map);
-	enemies.push_back(follower);
 }
 
 void LevelScene::update(int deltaTime)
@@ -194,24 +207,32 @@ void LevelScene::update(int deltaTime)
 
 		if (enterAnimTimer >= ENTER_ANIM_DURATION && pendingDoor != nullptr)
 		{
-			// Animation finished → do the actual scene transition
-			LevelScene* targetScene = pendingDoor->getRoom();
+			if (pendingDoor->getKind() == DoorType::OPENDOOR)
+			{
+				// Animation finished → do the actual scene transition
+				LevelScene* targetScene = pendingDoor->getRoom();
 
-			pendingDoor->setOpened(true);
-			targetScene->setPlayer(this->player);
-			targetScene->doors[doorNum]->setOpened(true);
-			this->player->setTileMap(targetScene->getMap());
+				pendingDoor->setOpened(true);
+				targetScene->setPlayer(this->player);
+				targetScene->doors[doorNum]->setOpened(true);
+				this->player->setTileMap(targetScene->getMap());
 
-			glm::vec2 doorPos = targetScene->findDoorPosition(doorNum);
-			player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
+				glm::vec2 doorPos = targetScene->findDoorPosition(doorNum);
+				player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
 
-			targetScene->setCooldown();
-			Game::instance().setScene(targetScene);
+				targetScene->setCooldown();
+				Game::instance().setScene(pendingDoor->getRoom());
 
-			// Reset state for when we return to this scene later
-			enteringDoor = false;
-			enterAnimTimer = 0.f;
-			pendingDoor = nullptr;
+				// Reset state for when we return to this scene later
+				enteringDoor = false;
+				enterAnimTimer = 0.f;
+				pendingDoor = nullptr;
+			}
+			else
+			{
+				KeyDoor* kd = static_cast<KeyDoor*> (pendingDoor);
+				Game::instance().getNextLevel(this);
+			}
 		}
 		return; // everything else is frozen
 	}
@@ -247,7 +268,7 @@ void LevelScene::update(int deltaTime)
 		{
 			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0)
 			{
-				if (d->getRoom() != nullptr)
+				if ((d->getKind() == DoorType::OPENDOOR && d->getRoom() != nullptr) || (d->getKind() == DoorType::KEYDOOR && totalNumKeys() == 0 ))
 				{
 					pendingDoor = d;
 					enteringDoor = true;
@@ -278,7 +299,7 @@ void LevelScene::update(int deltaTime)
 
 	// 4. Player Update (with input lock if cooldown is active)
 	player->update(deltaTime, (stairCooldown > 0));
-	player->playerEvent(this);
+	player->playerEvent(this, deltaTime);
 
 	// 5. Items updates
 	// 5.1 Keys
@@ -343,29 +364,38 @@ void LevelScene::update(int deltaTime)
 		bomb->update(deltaTime);
 	}
 
-	for (auto w : weights) {
+	for (auto w = weights.begin(); w != weights.end();) {
 		float pL = player->getPosition().x + SCREEN_X;
 		float pR = pL + 24; // Player width
-		float wL = w->getPosition().x;
+		float wL = (*w)->getPosition().x;
 		float wR = wL + 16; // Weight width
 
 		// Vertical overlap check
 		float pT = player->getPosition().y + SCREEN_Y;
 		float pB = pT + 32;
-		float wT = w->getPosition().y;
+		float wT = (*w)->getPosition().y;
 		float wB = wT + 16;
 
 		if (pB > wT && pT < wB) { // If at the same height
 			// If Player hits left side of weight while moving right
 			if ((pR - 2) > wL && pL < wL && Game::instance().getKey(GLFW_KEY_RIGHT)) {
-				w->push(2.0f); // Match player speed
+				(*w)->push(2.0f); // Match player speed
 			}
 			// If Player hits right side of weight while moving left
 			else if ((pL + 8) < wR && pR > wR && Game::instance().getKey(GLFW_KEY_LEFT)) {
-				w->push(-2.0f);
+				(*w)->push(-2.0f);
 			}
 		}
-		w->update(deltaTime);
+		(*w)->update(deltaTime);
+		if ((*w)->getFell())
+		{
+			delete *w;
+			w = weights.erase(w);
+		}
+		else
+		{
+			w++;
+		}
 	}
 
 	// Enemy updates
@@ -381,7 +411,7 @@ void LevelScene::update(int deltaTime)
 
 			if (follower != nullptr)
 			{
-				follower->update(deltaTime, player->getPosition());
+				follower->update(deltaTime, player->getPosition(), weights);
 			}
 			else
 			{
@@ -501,7 +531,27 @@ void LevelScene::setDoorNum(int numDoor)
 	doorNum = numDoor;
 }
 
-int LevelScene::numKeys()
+int LevelScene::totalNumKeys()
 {
-	return keys.size();
+	int numKeys = keys.size();
+	for (auto d : doors)
+	{
+		if (d->getKind() == DoorType::OPENDOOR)
+		{
+			numKeys += d->getRoom()->numKeys();
+		}
+	}
+	return numKeys;
+}
+
+void LevelScene::collectKeys()
+{
+	for (auto d : doors)
+	{
+		if (d->getKind() == DoorType::OPENDOOR)
+		{
+			d->getRoom()->clearKeys();
+		}
+	}
+	keys.clear();
 }

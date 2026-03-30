@@ -28,6 +28,7 @@
     <ClCompile Include="src\Bomb.cpp" />
     <ClCompile Include="src\Weight.cpp" />
     <ClCompile Include="src\Clock.cpp" />
+    <ClCompile Include="src\KeyDoor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimKeyframes.h" />
@@ -58,6 +59,7 @@
     <ClInclude Include="src\Bomb.h" />
     <ClInclude Include="src\Weight.h" />
     <ClInclude Include="src\Clock.h" />
+    <ClInclude Include="src\KeyDoor.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

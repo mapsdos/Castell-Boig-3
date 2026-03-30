@@ -15,9 +15,12 @@ public:
 	void push(float amount);
 	void setTileMap(TileMap* tileMap) { map = tileMap; }
 
+	bool getFell() { return fell; };
+
 private:
 	TileMap* map;
 	float fallVelocity;
+	bool fell;
 };
 
 #endif

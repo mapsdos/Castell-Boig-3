@@ -104,7 +104,7 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 	float frameWidthUV = 1.0f / numFrames;
 	float frameHeightUV = 1.0f;
 
-	bullets = bombs = 0;
+	bullets = bombs = actionTimer = 0;
 
 	bFloating = false;
 	spritesheet.loadFromFile("assets/images/sprites bob.png", TEXTURE_PIXEL_FORMAT_RGBA);
@@ -425,35 +425,44 @@ void Player::stopJumping()
 	jumpAngle = 0;
 }
 
-void Player::playerEvent(LevelScene* levelScene)
+void Player::playerEvent(LevelScene* levelScene, int deltaTime)
 {
-	if (Game::instance().getKey(GLFW_KEY_S))
+	if (actionTimer > 0)
 	{
-		if (bullets > 0)
-		{
-			--bullets;
-			Bullet* bullet = new Bullet();
-			// Spawn slightly in front of Spongebob
-			glm::vec2 spawnPos = glm::vec2(posPlayer.x + tileMapDispl.x + (!facingLeft ? 24 : 0),
-				posPlayer.y + tileMapDispl.y + 12);
-
-			bullet->init(spawnPos, *program, !facingLeft, "assets/images/bubble-pixel-art.png");
-
-			// Adding it to the vector makes it "exist" for the update and render loops
-			levelScene->addBullet(bullet);
-		}
+		actionTimer -= deltaTime;
 	}
-	if (Game::instance().getKey(GLFW_KEY_B))
+	else
 	{
-		if (bombs > 0)
+		if (Game::instance().getKey(GLFW_KEY_S))
 		{
-			--bombs;
-			Bomb* bomb = new Bomb();
-			glm::vec2 spawnPos = glm::vec2(posPlayer.x + 32, posPlayer.y + 16);
-			bomb->init(spawnPos, *program);
+			if (bullets > 0)
+			{
+				--bullets;
+				Bullet* bullet = new Bullet();
+				// Spawn slightly in front of Spongebob
+				glm::vec2 spawnPos = glm::vec2(posPlayer.x + tileMapDispl.x + (!facingLeft ? 24 : 0),
+					posPlayer.y + tileMapDispl.y + 12);
 
-			// Adding it to the vector makes it "exist" for the update and render loops
-			levelScene->addBomb(bomb);
+				bullet->init(spawnPos, *program, !facingLeft, "assets/images/bubble-pixel-art.png");
+
+				// Adding it to the vector makes it "exist" for the update and render loops
+				levelScene->addBullet(bullet);
+			}
+			actionTimer = 2000;
+		}
+		if (Game::instance().getKey(GLFW_KEY_B))
+		{
+			if (bombs > 0)
+			{
+				--bombs;
+				Bomb* bomb = new Bomb();
+				glm::vec2 spawnPos = glm::vec2(posPlayer.x + 32, posPlayer.y + 16);
+				bomb->init(spawnPos, *program);
+
+				// Adding it to the vector makes it "exist" for the update and render loops
+				levelScene->addBomb(bomb);
+			}
+			actionTimer = 2000;
 		}
 	}
 }

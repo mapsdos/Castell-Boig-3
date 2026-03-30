@@ -4,6 +4,7 @@
 #include "Entity.h"
 
 class LevelScene;
+enum DoorType {OPENDOOR = 0, KEYDOOR = 1};
 
 class Door : public Entity
 {
@@ -18,12 +19,14 @@ public:
 
     void setOpened(bool open) { isOpen = open; }
     bool isOpened() const { return isOpen; }
+    DoorType getKind() { return kind; };
     
-private:
+protected:
     bool isOpen = false;
     Sprite* opened;
     Texture spritesheetOpened;
     LevelScene* room;
+    DoorType kind;
 };
 
 #endif
