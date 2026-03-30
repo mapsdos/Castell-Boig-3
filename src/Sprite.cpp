@@ -109,6 +109,17 @@ void Sprite::changeAnimation(int animId)
 	}
 }
 
+void Sprite::setFrame(int animId, int keyframeIdx)
+{
+	if(animId < int(animations.size()) && keyframeIdx < int(animations[animId].keyframeDispl.size()))
+	{
+		currentAnimation = animId;
+		currentKeyframe = keyframeIdx;
+		timeAnimation = 0.f;
+		texCoordDispl = animations[animId].keyframeDispl[keyframeIdx];
+	}
+}
+
 int Sprite::animation() const
 {
 	return currentAnimation;

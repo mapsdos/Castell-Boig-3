@@ -5,8 +5,9 @@
 
 class LevelScene;
 
-class Door : public Entity
-{
+class Door : public Entity {
+public:
+    Entity* clone(ShaderProgram&) const override;
 public:
     // Ensure these signatures match Entity.h exactly
     void init(const glm::vec2& pos, ShaderProgram& program) override;

@@ -37,6 +37,7 @@ public:
 	void setPosition(const glm::vec2 &pos);
 	glm::vec2 getPosition() const;
 	glm::vec2 getSize() const;
+	void setFrame(int animId, int keyframeIdx);
 
 private:
 	Texture *texture;

@@ -1,4 +1,7 @@
 #include "Patroller.h"
+#include "ShaderProgram.h"
+Entity* Patroller::clone(ShaderProgram&) const { return nullptr; }
+
 #include <iostream>
 
 void Patroller::init(const glm::vec2& pos, ShaderProgram& program) {

@@ -29,6 +29,12 @@ public:
 	Sprite* getSprite() const { return sprite; }
 	void stopJumping();
 	void startDoorEnterAnimation();
+	void startHurtAnimation(bool enemyToRight);
+	void updateHurtLogic(int deltaTime);
+	bool isHurting()    const { return bHurting; }
+	bool isInvincible() const { return invincibilityTimer > 0.f; }
+	static const float HURT_DURATION;         // 625ms = 5 frames @ 8fps
+	static const float INVINCIBILITY_DURATION;
 private:
 	void handleClimbing();
 	bool handleHorizontalMovement();
@@ -45,6 +51,11 @@ private:
 	Sprite* sprite;
 	Sprite* spriteStand;
 	TileMap* map;
+
+	bool  bHurting = false;
+	float knockbackVelX = 0.f;
+	float hurtTimer = 0.f;
+	float invincibilityTimer = 0.f;
 
 	int lives;
 	Texture heartTexture;

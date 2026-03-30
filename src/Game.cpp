@@ -121,6 +121,7 @@ void Game::changeState(GameState newState)
 		currentScene = menuScene;
 		break;
 	case PLAYING:
+		level1Scene->init(); // Reinicia la escena al empezar partida
 		currentScene = level1Scene;
 		break;
 	case CREDITS:

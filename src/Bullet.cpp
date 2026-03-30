@@ -1,5 +1,11 @@
 #include "Bullet.h"
 
+Entity* Bullet::clone(ShaderProgram& program) const {
+    Bullet* b = new Bullet();
+    b->init(position, program, dirRight);
+    return b;
+}
+
 void Bullet::init(const glm::vec2& pos, ShaderProgram& program, bool moveRight) {
     position = pos;
     dirRight = moveRight;

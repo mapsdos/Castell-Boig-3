@@ -1,4 +1,7 @@
 #include "Shooter.h"
+#include "ShaderProgram.h"
+Entity* Shooter::clone(ShaderProgram&) const { return nullptr; }
+
 #include <iostream>
 
 void Shooter::init(const glm::vec2& pos, ShaderProgram& program) {

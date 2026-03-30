@@ -34,6 +34,7 @@ private:
 	TileMap* map;
 	Player* player;
 	std::vector<Entity*> items;
+	std::vector<Entity*> initialItems;
 	std::vector<Stairs*> stairs;
 	std::vector<Door*> doors;
 	std::vector<Enemy*> enemies;
@@ -44,6 +45,22 @@ private:
 	float  enterAnimTimer = 0.f;
 	const float ENTER_ANIM_DURATION = 375.f; // 3 frames × (1000/8) ms
 	Door* pendingDoor = nullptr;
+	// ── Hit / Death state ──────────────────────────────────────────────────
+	bool  playerHurting = false;
+	bool  fadingOut = false;
+	bool  youDied = false;
+	float fadeAlpha = 0.f;
+	float fadeTimer = 0.f;
+	float youDiedTimer = 0.f;
+
+	const float FADE_DURATION = 1000.f;
+	const float YOU_DIED_DURATION = 2500.f;
+
+	// Overlay sprite (1×1 pixel blanco escalado a pantalla)
+	Sprite* fadeSprite = nullptr;
+	Texture  fadeTexture;
+	Sprite* youDiedSprite = nullptr;
+	Texture  youDiedTexture;
 };
 
 #endif

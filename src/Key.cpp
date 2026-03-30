@@ -24,3 +24,10 @@ void Key::update(int deltaTime) {
 void Key::render(const glm::mat4& modelview) {
     sprite->render(modelview);
 }
+
+Entity* Key::clone(ShaderProgram& program) const {
+    Key* newKey = new Key();
+    newKey->init(this->position, program);
+    // Si hay más estado relevante, copiarlo aquí
+    return newKey;
+}
