@@ -12,7 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimKeyframes.h" />
+    <ClInclude Include="src\Bomb.h" />
+    <ClInclude Include="src\BubbleGun.h" />
     <ClInclude Include="src\Bullet.h" />
+    <ClInclude Include="src\Clock.h" />
     <ClInclude Include="src\CreditsScene.h" />
     <ClInclude Include="src\Door.h" />
     <ClInclude Include="src\Enemy.h" />
@@ -35,9 +38,13 @@
     <ClInclude Include="src\Stairs.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\TileMap.h" />
+    <ClInclude Include="src\Weight.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Bomb.cpp" />
+    <ClCompile Include="src\BubbleGun.cpp" />
     <ClCompile Include="src\Bullet.cpp" />
+    <ClCompile Include="src\Clock.cpp" />
     <ClCompile Include="src\CreditsScene.cpp" />
     <ClCompile Include="src\Door.cpp" />
     <ClCompile Include="src\Enemy.cpp" />
@@ -60,6 +67,7 @@
     <ClCompile Include="src\Stairs.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\TileMap.cpp" />
+    <ClCompile Include="src\Weight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

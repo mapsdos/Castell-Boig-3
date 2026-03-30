@@ -148,6 +148,12 @@ void TileMap::prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program)
 			case 4:
 			case 5:
 				break;
+			case 7:
+				break;
+			case 8:
+				break;
+			case 9:
+				break;
 			default:
 			{
 				if (tile == 6)
@@ -511,4 +517,9 @@ bool TileMap::hasFloorAt(const glm::ivec2& pixelPos) const {
 
 	// 4. Return true if the tile is NOT empty (usually 0 is sky/empty)
 	return (tileId > 0);
+}
+
+void TileMap::setMapTile(const glm::ivec2& pos)
+{
+	map[pos.y * mapSize.x + pos.x] = 0;
 }

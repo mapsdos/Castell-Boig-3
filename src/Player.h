@@ -3,6 +3,10 @@
 
 #include "Sprite.h"
 #include "TileMap.h"
+#include "Bullet.h"
+#include "Bomb.h"
+
+class LevelScene;
 
 class Player
 {
@@ -23,12 +27,18 @@ public:
 	int getLives() { return lives; }
 	void updateHeartPositions();
 	void receiveDamage(int amount);
-	glm::ivec2 getPosition() const;
+	glm::ivec2 getPosition() const {return posPlayer;};
 
 	bool isGodMode() const { return godMode; }
 	Sprite* getSprite() const { return sprite; }
 	void stopJumping();
 	void startDoorEnterAnimation();
+
+	void addBullet() { ++bullets; };
+	void addBomb() { ++bombs; };
+
+	void playerEvent(LevelScene* levelScene);
+
 private:
 	void handleClimbing();
 	bool handleHorizontalMovement();
@@ -37,6 +47,8 @@ private:
 	void updateGodModeLogic(int deltaTime);
 
 private:
+
+	ShaderProgram* program;
 	bool bFloating = false;
 	glm::ivec2 tileMapDispl, posPlayer;
 	int jumpAngle, startY;
@@ -49,6 +61,8 @@ private:
 	int lives;
 	Texture heartTexture;
 	Sprite* heartSprites[3];
+
+	int bullets, bombs;
 
 	bool godMode = false;
 	bool godModeActivating = false;

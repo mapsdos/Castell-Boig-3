@@ -10,11 +10,14 @@
 enum TileType {
 	EMPTY = 0,
 	WALL = 1,
-	STAIRS = 2,
+	WEIGHT = 2,
 	VINES = 3,
 	DOOR = 4,
 	KEY = 5,
-	JUMP = 6
+	JUMP = 6,
+	BUBBLEGUN = 7,
+	BOMB = 8,
+	STOP_TIME = 9
 };
 
 enum class AICommand { MOVE_LEFT, MOVE_RIGHT, CLIMB_UP, CLIMB_DOWN, FALL, TRANSPORT , ASCEND, FALL_RIGHT, FALL_LEFT};
@@ -65,6 +68,8 @@ public:
 	std::vector<PathStep> getPath(glm::vec2 posE, glm::vec2 posP);
 
 	bool hasFloorAt(const glm::ivec2& pixelPos) const;
+
+	void setMapTile(const glm::ivec2& pos);
 	
 private:
 	bool loadLevel(const string &);
