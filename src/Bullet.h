@@ -7,7 +7,7 @@ class Bullet : public Entity
 {
 public:
 	void init(const glm::vec2& pos, ShaderProgram& program) override;
-	void init(const glm::vec2& pos, ShaderProgram& program, bool moveRight);
+	void init(const glm::vec2& pos, ShaderProgram& program, bool moveRight, const string& spritePath);
 	void update(int deltaTime) override;
 	void render(const glm::mat4& modelview) override;
 

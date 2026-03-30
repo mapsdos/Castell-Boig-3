@@ -50,6 +50,8 @@ public:
 	glm::ivec2 Game::getMousePos() const;
 	bool isMouseButtonPressed(int button) const;
 
+	void getNextLevel(LevelScene* lvScn);
+
 private:
 	GameState state;
 	Scene* currentScene;
@@ -61,6 +63,8 @@ private:
 	LevelScene* level3Scene;
 	LevelScene* level4Scene;
 	LevelScene* level5Scene;
+
+	Player* player;
 
 
 	bool bPlay; // Continue to play game?

@@ -97,7 +97,7 @@ void Shooter::Shoot(int deltaTime, ShaderProgram& program) {
         glm::vec2 spawnPos = glm::vec2(position.x + tileMapDispl.x + (moveRight ? 24 : 0),
             position.y + tileMapDispl.y + 12);
 
-        bullet->init(spawnPos, program, moveRight);
+        bullet->init(spawnPos, program, moveRight, "assets/images/money.png");
 
         // Adding it to the vector makes it "exist" for the update and render loops
         bullets.push_back(bullet);

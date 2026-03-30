@@ -22,15 +22,15 @@ void Follower::update(int deltaTime) {
 }
 
 // 2. THE ACTUAL LOGIC
-void Follower::update(int deltaTime, const glm::vec2& playerPos) {
+void Follower::update(int deltaTime, const glm::vec2& playerPos, const std::vector<Weight*> weights) {
     // PATH MANAGEMENT: Update path every 500ms
     timer -= deltaTime;
-    if (pathSequence.empty() || (timer <= 0 && pathSequence.begin()->command != AICommand::ASCEND && pathSequence.begin()->command != AICommand::FALL_RIGHT && pathSequence.begin()->command != AICommand::FALL_LEFT)) {
+    if (pathSequence.empty() || (timer <= 0 && pathSequence.begin()->command != AICommand::ASCEND && pathSequence.begin()->command != AICommand::FALL_RIGHT && pathSequence.begin()->command != AICommand::FALL_LEFT && pathSequence.begin()->command != AICommand::FALL)) {
         // Use centers for pathfinding logic
         glm::vec2 feetPos = glm::vec2(position.x + 16, position.y + 24);
         glm::vec2 playerFeet = glm::vec2(playerPos.x + 16, playerPos.y + 16);
 
-        pathSequence = map->getPath(feetPos, playerFeet);
+        pathSequence = map->getPath(feetPos, playerFeet, weights);
         timer = 500;
     }
 
@@ -193,6 +193,7 @@ void Follower::handleLeap(PathStep& step, int dt) {
 
 void Follower::handleFall(PathStep& step, int dt) {
     int floorY;
+    velocity.x = 0;
     cout << 'a' << '\n';
     // Check if ALREADY grounded before applying any fall logic
     if (map->collisionMoveDown(glm::ivec2(position.x + 8, position.y + 1), glm::ivec2(16, 32), &floorY)) {
