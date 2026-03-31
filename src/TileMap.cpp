@@ -86,6 +86,9 @@ bool TileMap::loadLevel(const string &levelFile)
 	tilesheet.setMagFilter(GL_NEAREST);
 	getline(fin, line);
 	sstream.str(line);
+	sstream >> backgroundPath;
+	getline(fin, line);
+	sstream.str(line);
 	int numDoors;
 	sstream >> numDoors;
 	// Load the room file. Store in a vector.

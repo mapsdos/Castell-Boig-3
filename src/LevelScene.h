@@ -86,6 +86,9 @@ private:
 	bool stoppedTime;
 	int timeStopped;
 	string path;
+
+	Texture backgroundTexture;
+	Sprite* backgroundSprite = nullptr;
 };
 
 #endif

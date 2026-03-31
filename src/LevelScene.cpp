@@ -227,6 +227,14 @@ void LevelScene::init()
 	youDiedSprite->addKeyframe(0, glm::vec2(0.f, 0.f));
 	youDiedSprite->changeAnimation(0);
 	youDiedSprite->setPosition(glm::vec2(0.f, 197.f));
+
+	backgroundTexture.loadFromFile(map->getBackgroundPath(), TEXTURE_PIXEL_FORMAT_RGBA);
+
+	// Create a sprite the size of the screen
+	backgroundSprite = Sprite::createSprite(glm::ivec2(640, 480), glm::vec2(1.f, 1.f), &backgroundTexture, &texProgram);
+	backgroundSprite->setNumberAnimations(1);
+	backgroundSprite->addKeyframe(0, glm::vec2(0.f, 0.f));
+	backgroundSprite->changeAnimation(0);
 }
 
 void LevelScene::update(int deltaTime)
@@ -510,6 +518,72 @@ void LevelScene::update(int deltaTime)
 			w++;
 		}
 	}
+
+	// --- Collision: Projectiles & Weights vs Enemies ---
+	for (auto eIt = enemies.begin(); eIt != enemies.end(); ) {
+		bool enemyKilled = false;
+
+		// 1. Calculate Enemy Hitbox (World Space)
+		// Using the same +SCREEN_X/Y logic your weights/player use
+		float eL = (*eIt)->getPosition().x + SCREEN_X + 4; // 4px padding for tighter hits
+		float eR = eL + 24;
+		float eT = (*eIt)->getPosition().y + SCREEN_Y + 4;
+		float eB = eT + 24;
+
+		// A. Check Bullets
+		for (auto bIt = bulletsFired.begin(); bIt != bulletsFired.end(); ) {
+			glm::vec2 bPos = (*bIt)->getPosition();
+			// Assuming Bullet is 8x8 pixels
+			if (bPos.x < eR && bPos.x + 8 > eL && bPos.y < eB && bPos.y + 8 > eT) {
+				enemyKilled = true;
+				delete* bIt;
+				bIt = bulletsFired.erase(bIt);
+				break; // Stop checking other bullets for this enemy
+			}
+			else ++bIt;
+		}
+
+		// B. Check Bombs (if enemy is still alive)
+		if (!enemyKilled) {
+			for (auto bmIt = bombsPlaced.begin(); bmIt != bombsPlaced.end(); ) {
+				glm::vec2 bmPos = (*bmIt)->getPosition();
+				// Assuming Bomb is 16x16 pixels
+				if (bmPos.x < eR && bmPos.x + 16 > eL && bmPos.y < eB && bmPos.y + 16 > eT) {
+					enemyKilled = true;
+					delete* bmIt;
+					bmIt = bombsPlaced.erase(bmIt);
+					break;
+				}
+				else ++bmIt;
+			}
+		}
+
+		// C. Check Weights (Always kills on contact)
+		if (!enemyKilled) {
+			for (Weight* w : weights) {
+				float wL = w->getPosition().x; // Weight is already in World Space
+				float wR = wL + 16;
+				float wT = w->getPosition().y;
+				float wB = wT + 16;
+
+				if (wL < eR && wR > eL && wT < eB && wB > eT) {
+					enemyKilled = true;
+					// Note: We don't delete the weight here so it can crush multiple enemies
+					break;
+				}
+			}
+		}
+
+		// Finalize: If any item hit, delete the enemy
+		if (enemyKilled) {
+			delete* eIt;
+			eIt = enemies.erase(eIt);
+		}
+		else {
+			++eIt;
+		}
+	}
+
 	timeStopped -= deltaTime;
 	// Enemy updates
 	for (Enemy* e : enemies) {
@@ -648,6 +722,22 @@ void LevelScene::render()
 	modelview = glm::translate(glm::mat4(1.0f), glm::vec3(-camX, -camY, 0.0f));
 
 	texProgram.use();
+
+	// --- BACKGROUND RENDERING ---
+	if (backgroundSprite != nullptr) {
+		// Use the standard game projection (zoomWidth x zoomHeight) 
+		// so the background is scaled correctly relative to tiles
+		texProgram.setUniformMatrix4f("projection", projection);
+
+		// PARALLAX: Multiply camera movement by a factor (0.0 to 1.0)
+		// 0.2 means it moves very slowly (far away), 0.8 moves almost with the player
+		float parallaxFactor = 0.3f;
+		glm::mat4 bgModelview = glm::translate(glm::mat4(1.0f), glm::vec3(-camX * parallaxFactor, -camY * parallaxFactor, 0.0f));
+
+		texProgram.setUniformMatrix4f("modelview", bgModelview);
+		backgroundSprite->render(bgModelview);
+	}
+
 	texProgram.setUniformMatrix4f("projection", projection);
 	texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
 	texProgram.setUniformMatrix4f("modelview", modelview);
@@ -816,4 +906,9 @@ void LevelScene::clearLevel() {
 
 	// 5. NULLIFY PENDING POINTERS
 	pendingDoor = nullptr;
+
+	if (backgroundSprite != nullptr) {
+		delete backgroundSprite;
+		backgroundSprite = nullptr;
+	}
 }
