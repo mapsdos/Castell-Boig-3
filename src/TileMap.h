@@ -76,6 +76,8 @@ public:
 	bool hasFloorAt(const glm::ivec2& pixelPos) const;
 
 	void setMapTile(const glm::ivec2& pos);
+
+	string getBackgroundPath() { return backgroundPath; };
 	
 private:
 	bool loadLevel(const string &);
@@ -94,6 +96,7 @@ private:
 	TileType tileType;
 	std::map<char, std::vector<glm::vec2>> positions;
 	std::vector<string> roomFiles;
+	string backgroundPath;
 };
 
 

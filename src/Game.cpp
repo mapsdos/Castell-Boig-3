@@ -75,10 +75,10 @@ void Game::keyPressed(int key)
 	else if (key == GLFW_KEY_M) { // Press M to return to menu
 		changeState(MAIN_MENU);
 	}
-	if (key == GLFW_KEY_1) { changeState(PLAYING); }
-	if (key == GLFW_KEY_2) { changeState(PLAYING); getNextLevel(level1Scene); }
+	if (key == GLFW_KEY_1) { setStateToPlaying(); currentScene = level1Scene; currentScene->init(); }
+	if (key == GLFW_KEY_2) { setStateToPlaying(); getNextLevel(level1Scene); }
 	if (key == GLFW_KEY_3) {
-		changeState(PLAYING); getNextLevel(level2Scene);
+		setStateToPlaying(); getNextLevel(level2Scene);
 	}
 	if (key == GLFW_KEY_K)
 	{
@@ -139,7 +139,6 @@ void Game::changeState(GameState newState)
 		currentScene = menuScene;
 		break;
 	case PLAYING:
-		level1Scene->init(); // Reinicia la escena al empezar partida
 		currentScene = level1Scene;
 		break;
 	case CREDITS:
