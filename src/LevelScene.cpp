@@ -415,8 +415,6 @@ void LevelScene::update(int deltaTime)
 			}
 			else
 			{
-				e->update(deltaTime);
-
 				// 1. Try to cast the generic Enemy to a Shooter
 				Shooter* shooter = dynamic_cast<Shooter*>(e);
 
@@ -424,6 +422,12 @@ void LevelScene::update(int deltaTime)
 				if (shooter != nullptr) {
 					// Now you can access Shooter-specific functions
 					shooter->Shoot(deltaTime, texProgram);
+					shooter->update(deltaTime, weights);
+				}
+				else
+				{
+					Patroller* patroller = static_cast<Patroller*>(e);
+					patroller->update(deltaTime, weights);
 				}
 			}
 		}
