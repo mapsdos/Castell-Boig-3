@@ -44,6 +44,7 @@ LevelScene::~LevelScene()
 
 void LevelScene::init()
 {
+	clearLevel();
 	initShaders();
 	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 
@@ -558,4 +559,40 @@ void LevelScene::collectKeys()
 		}
 	}
 	keys.clear();
+}
+
+void LevelScene::clearLevel() {
+	// 1. Clear Enemies
+	for (Enemy* e : enemies) delete e;
+	enemies.clear();
+
+	// 2. Clear Items/Keys
+	for (Key* k : keys) delete k;
+	keys.clear();
+
+	for (Entity* i : items) delete i;
+	items.clear();
+
+	// 3. Clear Weights
+	for (Weight* w : weights) delete w;
+	weights.clear();
+
+	// 4. Clear Projectiles and Placed Objects
+	for (Bullet* b : bulletsFired) delete b;
+	bulletsFired.clear();
+
+	for (Bomb* b : bombsPlaced) delete b;
+	bombsPlaced.clear();
+
+	// 5. Clear Static Level Entities
+	for (Stairs* s : stairs) delete s;
+	stairs.clear();
+
+	for (Door* d : doors) delete d;
+	doors.clear();
+
+	// Reset state variables
+	stairCooldown = 0.0f;
+	enteringDoor = false;
+	pendingDoor = nullptr;
 }

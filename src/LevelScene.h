@@ -42,6 +42,9 @@ public:
 	void addBomb(Bomb* bomb) { bombsPlaced.push_back(bomb); };
 
 private:
+	void clearLevel();
+
+private:
 	TileMap* map;
 	Player* player;
 	std::vector<Key*> keys;
