@@ -92,7 +92,7 @@ void Patroller::update(int deltaTime, const std::vector<Weight*> weights)
 
     // Using the Player's specific hitbox logic
     float pL = position.x + 32;
-    float pR = pL + 24;
+    float pR = pL + 32;
     float pT = position.y + 16;
     float pB = pT + 32;
 

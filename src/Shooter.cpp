@@ -128,7 +128,7 @@ void Shooter::update(int deltaTime, const std::vector<Weight*> weights)
     // --- 3. WEIGHT COLLISION (Mirrored from Player Logic) ---
     // We use the same SCREEN offsets and hitbox widths you provided
     float pL = position.x + 32; // Using 32 based on your previous code's offset
-    float pR = pL + 24;         // Shooter width (matching player)
+    float pR = pL + 32;         // Shooter width (matching player)
     float pT = position.y + 16; // Adjusting for your engine's Y offset
     float pB = pT + 32;         // Shooter height
 

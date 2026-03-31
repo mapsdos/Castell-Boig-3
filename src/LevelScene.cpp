@@ -566,17 +566,19 @@ void LevelScene::update(int deltaTime)
 
 		// C. Check Weights (Always kills on contact)
 		if (!enemyKilled) {
-			for (Weight* w : weights) {
-				float wL = w->getPosition().x; // Weight is already in World Space
+			for (auto w = weights.begin(); w != weights.end();) {
+				float wL = (*w)->getPosition().x; // Weight is already in World Space
 				float wR = wL + 16;
-				float wT = w->getPosition().y;
+				float wT = (*w)->getPosition().y;
 				float wB = wT + 16;
 
 				if (wL < eR && wR > eL && wT < eB && wB > eT) {
 					enemyKilled = true;
-					// Note: We don't delete the weight here so it can crush multiple enemies
+					delete (*w);
+					w = weights.erase(w);
 					break;
 				}
+				else ++w;
 			}
 		}
 
