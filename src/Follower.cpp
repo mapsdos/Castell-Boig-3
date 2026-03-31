@@ -66,8 +66,6 @@ void Follower::followPath(int deltaTime) {
     float length = glm::length(targetDir);
     int clampedDT = std::min<int>(deltaTime, 33);
 
-    // cout << (current.command == AICommand::ASCEND) << ' ' << (current.command == AICommand::TRANSPORT) << ' ' << (current.command == AICommand::MOVE_RIGHT) << ' ' << (current.command == AICommand::MOVE_LEFT) << ' ' << (current.command == AICommand::CLIMB_DOWN) << ' ' << (current.command == AICommand::CLIMB_UP) << ' ' << (current.command == AICommand::FALL) << ' ' << '\n';
-
     switch (current.command) {
     case AICommand::ASCEND:       
         handleAscend(current, clampedDT);
@@ -100,8 +98,6 @@ void Follower::handleAscend(PathStep& step, int dt) {
 
     float liftSpeed = 0.25f;
     position.y -= liftSpeed * (float)dt;
-
-    cout << position.y << ' ' << step.targetPoint.y << '\n';
 
     // Check arrival at the "peak"
     if (position.y <= step.targetPoint.y) {
@@ -197,7 +193,6 @@ void Follower::handleLeap(PathStep& step, int dt) {
 void Follower::handleFall(PathStep& step, int dt) {
     int floorY;
     velocity.x = 0;
-    cout << 'a' << '\n';
     // Check if ALREADY grounded before applying any fall logic
     if (map->collisionMoveDown(glm::ivec2(position.x + 8, position.y + 1), glm::ivec2(16, 32), &floorY)) {
         // Already on ground - skip this fall step entirely

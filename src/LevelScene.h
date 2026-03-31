@@ -89,6 +89,8 @@ private:
 
 	Texture backgroundTexture;
 	Sprite* backgroundSprite = nullptr;
+
+	bool firstCall = true;
 };
 
 #endif

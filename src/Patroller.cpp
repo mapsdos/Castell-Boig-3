@@ -79,6 +79,7 @@ void Patroller::update(int deltaTime, const std::vector<Weight*> weights)
     int mapX = (int)position.x;
     int mapY = (int)position.y;
     bool shouldTurn = false;
+    cout << "4: " << this << ' ' << position.x << ' ' << position.y << ' ' << deltaTime << '\n';
 
     movementTimer -= deltaTime;
     if (movementTimer <= 0) {
@@ -137,6 +138,8 @@ void Patroller::update(int deltaTime, const std::vector<Weight*> weights)
     else {
         position.x += moveRight ? speed : -speed;
     }
+
+    cout << "5: " << this << ' ' << position.x << ' ' << position.y << '\n';
 
     this->setPosition(position);
     sprite->update(deltaTime);

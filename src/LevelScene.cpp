@@ -17,6 +17,16 @@
 #define INIT_PLAYER_X_TILES 4
 #define INIT_PLAYER_Y_TILES 25
 
+namespace {
+	template<typename EntityType> void createEntity(std::vector<Enemy*>& entities, TileMap* map, ShaderProgram& texProgram, int i, int j) {
+		EntityType* entity = new EntityType();
+		entity->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+		entity->setPosition(glm::vec2(i * map->getTileSize() - SCREEN_X, (j * map->getTileSize()) - SCREEN_Y));
+		entity->setTileMap(map);
+		entities.push_back(entity);
+	}
+}
+
 
 LevelScene::LevelScene()
 {
@@ -54,6 +64,7 @@ void LevelScene::init()
 	doorNum = 0;
 	stoppedTime = false;
 	timeStopped = 0;
+	firstCall = true;
 
 	// Reset death/hurt states
 	playerHurting = false;
@@ -71,25 +82,27 @@ void LevelScene::init()
 		for (int i = 0; i < size.x; i++) {
 			// Check the map data for the key ID (2)
 			int tileId = map->getTileIdAt(glm::ivec2(i * map->getTileSize(), j * map->getTileSize()));
-			if (tileId == 5) {
-				Key* newKey = new Key();
-
-				// Calculate pixel position: (Column * TileSize, Row * TileSize)
+			// Calculate pixel position: (Column * TileSize, Row * TileSize)
 				// Add SCREEN_X/Y if your map has an offset
 				// In LevelScene.cpp init()
-				float x = SCREEN_X + (i * map->getTileSize());
-				// Subtract 16 (or the difference between sprite height and tile height) 
-				// to pull the key "up" out of the floor
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
+			float x = static_cast<float>(SCREEN_X + (i * map->getTileSize()));
+			// Subtract 16 (or the difference between sprite height and tile height) 
+			// to pull the key "up" out of the floor
+			float y = static_cast<float>(SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize()));
+			switch (tileId)
+			{
+			case 5:
+			{
+				Key* newKey = new Key();
 
 				newKey->init(glm::vec2(x, y), texProgram);
 				keys.push_back(newKey);
+				break;
 			}
-			// Inside the tile loop where tileId == 4
-			else if (tileId == 4) {
+			case 4:
+				// Inside the tile loop where tileId == 4
+			{
 				Door* newDoor = new Door();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newDoor->init(glm::vec2(x, y), texProgram);
 
 				if (roomSize > 0) {
@@ -107,73 +120,61 @@ void LevelScene::init()
 					--roomSize;
 				}
 				doors.push_back(newDoor);
+				break;
 			}
-			else if (tileId == 10)
+			case 10:
 			{
 				KeyDoor* newKeyDoor = new KeyDoor();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newKeyDoor->init(glm::vec2(x, y), texProgram);
 
 				doors.insert(doors.begin(), newKeyDoor);
+				break;
 			}
-			else if (tileId == 7)
+			case 7:
 			{
 				BubbleGun* newBubbleGun = new BubbleGun();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newBubbleGun->init(glm::vec2(x, y), texProgram);
 				items.push_back(newBubbleGun);
+				break;
 			}
-			else if (tileId == 8)
+			case 8:
 			{
 				Bomb* newBomb = new Bomb();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newBomb->init(glm::vec2(x, y), texProgram);
 				items.push_back(newBomb);
+				break;
 			}
-			else if (tileId == 2)
+			case 2:
 			{
 				map->setMapTile(glm::vec2(i, j));
 				Weight* newWeight = new Weight();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize());
-				newWeight->init(glm::vec2(x, y), texProgram);
+				newWeight->init(glm::vec2(x, y + SCREEN_Y), texProgram);
 				newWeight->setTileMap(map);
 				weights.push_back(newWeight);
+				break;
 			}
-			else if (tileId == 9)
+			case 9:
 			{
 				Clock* newClock = new Clock();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newClock->init(glm::vec2(x, y), texProgram);
 				items.push_back(newClock);
+				break;
 			}
-			else if (tileId == 11)
+			case 11:
 			{
-				Patroller* patroller = new Patroller();
-				patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-				patroller->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
-				patroller->setTileMap(map);
-				enemies.push_back(patroller);
+				createEntity<Patroller>(enemies, map, texProgram, i, j);
+				break;
 			}
-			else if (tileId == 12)
+			case 12:
 			{
-				Shooter* shooter = new Shooter();
-				shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-				shooter->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
-				shooter->setTileMap(map);
-				enemies.push_back(shooter);
+				createEntity<Shooter>(enemies, map, texProgram, i, j);
+				break;
 			}
-			else if (tileId == 13)
+			case 13:
 			{
-				Follower* follower = new Follower();
-				follower->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-				follower->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
-				follower->setTileMap(map);
-				enemies.push_back(follower);
+				createEntity<Follower>(enemies, map, texProgram, i, j);
+				break;
+			}
 			}
 		}
 	}
@@ -239,6 +240,11 @@ void LevelScene::init()
 
 void LevelScene::update(int deltaTime)
 {
+	if (firstCall)
+	{
+		firstCall = false;
+		deltaTime = 0;
+	}
 	currentTime += deltaTime;
 
 	// ── YOU DIED FADE: fade out después de mostrar "you died" ──────────
