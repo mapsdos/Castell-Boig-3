@@ -68,6 +68,7 @@ void Player::receiveDamage(int amount)
 {
 	if (godMode) return; // inmune
 	setLives(lives - amount);
+	Game::instance().loseLives();
 }
 
 void Player::heal(int amount)
@@ -78,7 +79,7 @@ void Player::heal(int amount)
 void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 {
 	program = &shaderProgram;
-	lives = 3;
+	lives = Game::instance().getLives();
 	heartTexture.loadFromFile("assets/images/hearts.png", TEXTURE_PIXEL_FORMAT_RGBA);
 	float heartWidthUV = 12.0f / 24.0f;
 	float heartHeightUV = 12.0f / 12.0f;
@@ -300,61 +301,74 @@ void Player::updateGodModeLogic(int deltaTime)
 		godModeActivationTimer += deltaTime;
 		if (godModeActivationTimer >= GOD_ACTIVATE_DURATION)
 		{
+			godModeActivationTimer = 0.f; // Safety reset
 			godModeActivating = false;
 			sprite->changeAnimation(facingLeft ? GOD_MOVE_LEFT : GOD_MOVE_RIGHT);
 		}
 		return;
 	}
 
-	// ── Move without changing to normal animations ──
-	if (Game::instance().getKey(GLFW_KEY_LEFT))
-	{
+	// 1. Horizontal Movement (Standard)
+	bool movingSide = false;
+	if (Game::instance().getKey(GLFW_KEY_LEFT)) {
 		facingLeft = true;
+		movingSide = true;
 		posPlayer.x -= 2;
 		if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32))) posPlayer.x += 2;
 	}
-	else if (Game::instance().getKey(GLFW_KEY_RIGHT))
-	{
+	else if (Game::instance().getKey(GLFW_KEY_RIGHT)) {
 		facingLeft = false;
+		movingSide = true;
 		posPlayer.x += 2;
 		if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32))) posPlayer.x -= 2;
 	}
 
-	// ── Force God Mode Animation ──
+	// 2. Animation Lock
 	int godAnim = facingLeft ? GOD_MOVE_LEFT : GOD_MOVE_RIGHT;
-	if (sprite->animation() != godAnim)
-		sprite->changeAnimation(godAnim);
+	if (sprite->animation() != godAnim) sprite->changeAnimation(godAnim);
 
-	// ── God Jump Physics (using bFloating as the toggle) ──
-	if (bFloating)
-	{
-		jumpAngle += JUMP_ANGLE_STEP;
-		posPlayer.y = startY - (int)(JUMP_HEIGHT * sin(3.14159f * jumpAngle / 180.f));
+	// 3. Jump Pad vs Gravity Logic
+	int tileUnderFeet = map->getTileIdAt(posPlayer + glm::ivec2(12, 32));
 
-		if (jumpAngle > 90)
-		{
-			if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y))
-				bFloating = false;
-		}
-		if (jumpAngle >= 180) bFloating = false;
+	// Start Floating (Bubble Lift) if on pad and pressing UP
+	if (tileUnderFeet == 6 && Game::instance().getKey(GLFW_KEY_UP)) {
+		bFloating = true;
 	}
-	else
-	{
+
+	if (bFloating) {
+		// Exit condition: Moving sideways without holding UP (Matches your normal mode)
+		if (movingSide && !Game::instance().getKey(GLFW_KEY_UP)) {
+			bFloating = false;
+		}
+		else {
+			posPlayer.y -= 4; // Constant upward lift
+			godHoverOffset = 0;
+
+			int headY;
+			if (map->collisionMoveUp(posPlayer, glm::ivec2(24, 32), &headY)) {
+				posPlayer.y = (float)headY;
+				bFloating = false;
+			}
+		}
+	}
+	else {
+		// Normal God Mode Gravity + Hover
 		posPlayer.y += FALL_STEP;
 		bool onGround = map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y);
 
-		if (onGround)
-		{
+		if (onGround) {
 			godHoverOffset = HOVER_PIXELS;
-			if (Game::instance().getKey(GLFW_KEY_UP))
-			{
-				bFloating = true;
-				jumpAngle = 0;
-				startY = posPlayer.y;
-				godHoverOffset = 0;
+
+			// Standard Sine Jump (Not the pad lift)
+			if (Game::instance().getKey(GLFW_KEY_UP) && tileUnderFeet != 6) {
+				// If you still want the normal God Jump when NOT on a pad:
+				// You'd need a separate boolean like 'bJumping' 
+				// but for now, this lets the Pad take priority.
 			}
 		}
-		else godHoverOffset = 0;
+		else {
+			godHoverOffset = 0;
+		}
 	}
 }
 

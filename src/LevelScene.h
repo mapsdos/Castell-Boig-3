@@ -26,7 +26,6 @@ public:
 
 	// "override" tells the compiler these replace the base Scene versions
 	void init() override;
-	void init(string levelPath);
 	void update(int deltaTime) override;
 	void render() override;
 	glm::vec2 findDoorPosition(int numDoor);
@@ -34,7 +33,6 @@ public:
 	void setPlayer(Player* newPlayer);
 	TileMap* getMap() const { return map; }
 	void setDoorNum(int numDoor);
-	void LoadEnemies();
 
 	int totalNumKeys();
 	void collectKeys();
@@ -51,7 +49,6 @@ private:
 	Player* player;
 	std::vector<Key*> keys;
 	std::vector<Entity*> items;
-	std::vector<Entity*> initialItems;
 	std::vector<Stairs*> stairs;
 	std::vector<Door*> doors;
 	std::vector<Enemy*> enemies;
