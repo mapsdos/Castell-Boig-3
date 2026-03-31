@@ -51,6 +51,7 @@ public:
 	bool isMouseButtonPressed(int button) const;
 
 	void getNextLevel(LevelScene* lvScn);
+	void setStateToPlaying() { state = GameState::PLAYING; };
 
 	int getLives() { return playerLives; };
 	void loseLives() { --playerLives; };

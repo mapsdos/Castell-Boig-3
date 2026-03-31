@@ -10,5 +10,5 @@ assets/images/doorBackground.png   -- Background
 1                  1
 1                  1
 1                  1
-1 4            8   1
+1 4            5   1
 11111111111111111111
