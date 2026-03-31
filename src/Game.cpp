@@ -40,6 +40,7 @@ void Game::init()
 
 	currentScene = menuScene;
 
+	playerLives = 3;
 	player = new Player();
 
 	level1Scene = new LevelScene("assets/levels/level01.txt",player);

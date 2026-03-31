@@ -52,6 +52,10 @@ public:
 
 	void getNextLevel(LevelScene* lvScn);
 
+	int getLives() { return playerLives; };
+	void loseLives() { --playerLives; };
+	void resetLives() { playerLives = 3; };
+
 private:
 	GameState state;
 	Scene* currentScene;
@@ -73,6 +77,7 @@ private:
 
 	glm::ivec2 mousePos;
 	bool mouseButtons[GLFW_MOUSE_BUTTON_LAST + 1];
+	int playerLives;
 
 };
 
