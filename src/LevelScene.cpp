@@ -155,7 +155,8 @@ void LevelScene::init()
 			{
 				Patroller* patroller = new Patroller();
 				patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-				patroller->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
+				// Patrick is 18x38, adjust spawn to be above the tile
+				patroller->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (38 - map->getTileSize())));
 				patroller->setTileMap(map);
 				enemies.push_back(patroller);
 			}
@@ -163,7 +164,8 @@ void LevelScene::init()
 			{
 				Shooter* shooter = new Shooter();
 				shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-				shooter->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
+				// Squidward is 18x40, adjust spawn to be above the tile
+				shooter->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (40 - map->getTileSize())));
 				shooter->setTileMap(map);
 				enemies.push_back(shooter);
 			}
@@ -171,7 +173,8 @@ void LevelScene::init()
 			{
 				Follower* follower = new Follower();
 				follower->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
-				follower->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (32 - map->getTileSize())));
+				// Plankton is 16x20, adjust spawn to be above the tile
+				follower->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (20 - map->getTileSize())));
 				follower->setTileMap(map);
 				enemies.push_back(follower);
 			}
@@ -535,6 +538,24 @@ void LevelScene::update(int deltaTime)
 					// Now you can access Shooter-specific functions
 					shooter->Shoot(deltaTime, texProgram);
 					shooter->update(deltaTime, weights);
+					
+					// Remove bullets that hit solid blocks
+					std::vector<Bullet*>& bullets = shooter->getBullets();
+					auto it = bullets.begin();
+					while (it != bullets.end()) {
+						Bullet* b = *it;
+						glm::vec2 bPos = b->getPosition();
+						glm::ivec2 bSize = b->getSize();
+						
+						// Check if bullet hits a solid tile (tile ID 1)
+						int tileAtBullet = map->getTileIdAt(glm::ivec2((int)bPos.x + bSize.x/2, (int)bPos.y + bSize.y/2));
+						if (tileAtBullet == 1) {
+							delete b;
+							it = bullets.erase(it);
+						} else {
+							++it;
+						}
+					}
 				}
 				else
 				{
@@ -550,8 +571,30 @@ void LevelScene::update(int deltaTime)
 			glm::vec2 ePos = e->getPosition();
 			float eWorldX = ePos.x + SCREEN_X;
 			float eWorldY = ePos.y + SCREEN_Y;
-			float eL = eWorldX + 4, eR = eWorldX + 28;
-			float eT = eWorldY + 4, eB = eWorldY + 28;
+			
+			// Different hitboxes based on enemy type
+			float eL, eR, eT, eB;
+			Shooter* shooter = dynamic_cast<Shooter*>(e);
+			Patroller* patroller = dynamic_cast<Patroller*>(e);
+			Follower* follower = dynamic_cast<Follower*>(e);
+			
+			if (shooter) {
+				// Squidward: 18x40
+				eL = eWorldX; eR = eWorldX + 18;
+				eT = eWorldY; eB = eWorldY + 40;
+			} else if (patroller) {
+				// Patrick: 18x38
+				eL = eWorldX; eR = eWorldX + 18;
+				eT = eWorldY; eB = eWorldY + 38;
+			} else if (follower) {
+				// Plankton: 16x20
+				eL = eWorldX; eR = eWorldX + 16;
+				eT = eWorldY; eB = eWorldY + 20;
+			} else {
+				// Default fallback
+				eL = eWorldX; eR = eWorldX + 32;
+				eT = eWorldY; eB = eWorldY + 32;
+			}
 
 			if (pL < eR && pR > eL && pT < eB && pB > eT)
 			{
@@ -575,8 +618,9 @@ void LevelScene::update(int deltaTime)
 			for (Bullet* b : shooter->getBullets())
 			{
 				glm::vec2 bPos = b->getPosition();
-				float bL = bPos.x, bR = bPos.x + 8.f;
-				float bT = bPos.y, bB = bPos.y + 8.f;
+				glm::ivec2 bSize = b->getSize();
+				float bL = bPos.x, bR = bPos.x + bSize.x;
+				float bT = bPos.y, bB = bPos.y + bSize.y;
 
 				if (pL < bR && pR > bL && pT < bB && pB > bT)
 				{

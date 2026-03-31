@@ -4,6 +4,12 @@
 #include "Enemy.h"
 #include "Weight.h"
 
+enum FollowerAnims {
+	PLANKTON_STAND_RIGHT, PLANKTON_STAND_LEFT,
+	PLANKTON_WALK_RIGHT, PLANKTON_WALK_LEFT,
+	PLANKTON_STAIRS
+};
+
 class Follower : public Enemy {
 public:
     Entity* clone(ShaderProgram&) const override;
@@ -14,14 +20,17 @@ public:
 	void followPath(int deltaTime);
 private:
 
-	void handleAscend(PathStep& step, int dt);
 	void handleMove(PathStep& step, glm::vec2 dir, float len, int dt);
 	void handleClimb(PathStep& step, glm::vec2 dir, float len, int dt);
-	void handleLeap(PathStep& step, int dt);
 	void handleFall(PathStep& step, int dt);
 	void handleTransport(PathStep& step);
+	void updateAnimation();
 
 	int timer;
+	bool isClimbing = false;
+	bool lastMoveRight = true;
+	int spriteWidth = 16;
+	int spriteHeight = 20;
 	std::vector<PathStep> pathSequence;
 };
 
