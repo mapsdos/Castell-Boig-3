@@ -1,8 +1,8 @@
 #include "Patroller.h"
-#include "ShaderProgram.h"
-Entity* Patroller::clone(ShaderProgram&) const { return nullptr; }
-
+#include "Weight.h"
 #include <iostream>
+
+Entity* Patroller::clone(ShaderProgram&) const { return nullptr; }
 
 void Patroller::init(const glm::vec2& pos, ShaderProgram& program) {
     Enemy::init(pos, program); // Call base init to set position
@@ -67,6 +67,74 @@ void Patroller::update(int deltaTime) {
     }
     else {
         float speed = 0.1f * deltaTime;
+        position.x += moveRight ? speed : -speed;
+    }
+
+    this->setPosition(position);
+    sprite->update(deltaTime);
+}
+
+void Patroller::update(int deltaTime, const std::vector<Weight*> weights)
+{
+    int mapX = (int)position.x;
+    int mapY = (int)position.y;
+    bool shouldTurn = false;
+
+    movementTimer -= deltaTime;
+    if (movementTimer <= 0) {
+        isIdle = !isIdle;
+        movementTimer = 1000 + (rand() % 2000);
+    }
+    if (isIdle) { sprite->update(deltaTime); return; }
+
+    float speed = 0.1f * deltaTime;
+
+    // Using the Player's specific hitbox logic
+    float pL = position.x + 32;
+    float pR = pL + 24;
+    float pT = position.y + 16;
+    float pB = pT + 32;
+
+    for (Weight* w : weights) {
+        float wL = w->getPosition().x;
+        float wR = wL + 16;
+        float wT = w->getPosition().y;
+        float wB = wT + 16;
+
+        if (pB > wT && pT < wB) {
+            if (moveRight) {
+                if ((pR + speed) > wL && pL < wL) {
+                    shouldTurn = true;
+                    break;
+                }
+            }
+            else {
+                if ((pL - speed) < wR && pR > wR) {
+                    shouldTurn = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!shouldTurn) {
+        if (moveRight) {
+            if (map->getTileIdAt(glm::ivec2(mapX + 32, mapY + 16)) == 1) shouldTurn = true;
+            else if (map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 1 &&
+                map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 6) shouldTurn = true;
+        }
+        else {
+            if (map->getTileIdAt(glm::ivec2(mapX - 1, mapY + 16)) == 1) shouldTurn = true;
+            else if (map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 1 &&
+                map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 6) shouldTurn = true;
+        }
+    }
+
+    if (shouldTurn) {
+        moveRight = !moveRight;
+        position.x += moveRight ? 1.0f : -1.0f;
+    }
+    else {
         position.x += moveRight ? speed : -speed;
     }
 

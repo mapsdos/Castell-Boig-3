@@ -12,6 +12,8 @@ public:
 	void update(int deltaTime) override;
 	void render(const glm::mat4& modelview) override;
 
+	void update(int deltaTime, const std::vector<Weight*> weights);
+
 	void Shoot(int deltaTime, ShaderProgram& program);
 	const std::vector<Bullet*>& getBullets() const { return bullets; }
 

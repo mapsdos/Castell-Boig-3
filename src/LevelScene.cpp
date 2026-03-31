@@ -45,39 +45,6 @@ LevelScene::~LevelScene()
 
 void LevelScene::init()
 {
-    // Reset all gameplay and animation flags
-    youDied = false;
-    youDiedFading = false;
-    fadingOut = false;
-    youDiedTimer = 0.f;
-    fadeTimer = 0.f;
-    fadeAlpha = 0.f;
-    playerHurting = false;
-    hurtPaused = false;
-    hurtPauseTimer = 0.f;
-    enteringDoor = false;
-    enterAnimTimer = 0.f;
-    pendingDoor = nullptr;
-    stairCooldown = 0.f;
-    // Usa el path guardado si existe, sino usa el default
-    string levelPath = path.empty() ? "assets/levels/level01.txt" : path;
-    init(levelPath);
-}
-
-void LevelScene::init(string path)
-{
-    // Limpiar entidades previas para evitar duplicados
-    for (auto* e : enemies) delete e;
-    enemies.clear();
-    for (auto* it : items) delete it;
-    items.clear();
-    for (auto* it : initialItems) delete it;
-    initialItems.clear();
-    for (auto* s : stairs) delete s;
-    stairs.clear();
-    for (auto* d : doors) delete d;
-    doors.clear();
-    // Ahora inicializa normalmente
 	initShaders();
 	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 
@@ -86,6 +53,17 @@ void LevelScene::init(string path)
 	doorNum = 0;
 	stoppedTime = false;
 	timeStopped = 0;
+
+	// Reset death/hurt states
+	playerHurting = false;
+	hurtPaused = false;
+	hurtPauseTimer = 0.f;
+	fadingOut = false;
+	fadeTimer = 0.f;
+	fadeAlpha = 0.f;
+	youDied = false;
+	youDiedTimer = 0.f;
+	youDiedFading = false;
 
 	glm::ivec2 size = map->getMapSize();
 	for (int j = 0; j < size.y; j++) {
@@ -509,8 +487,6 @@ void LevelScene::update(int deltaTime)
 		}
 		else
 		{
-			e->update(deltaTime);
-
 			// 1. Try to cast the generic Enemy to a Shooter
 			Shooter* shooter = dynamic_cast<Shooter*>(e);
 
@@ -518,6 +494,12 @@ void LevelScene::update(int deltaTime)
 			if (shooter != nullptr) {
 				// Now you can access Shooter-specific functions
 				shooter->Shoot(deltaTime, texProgram);
+				shooter->update(deltaTime, weights);
+			}
+			else
+			{
+				Patroller* patroller = static_cast<Patroller*>(e);
+				patroller->update(deltaTime, weights);
 			}
 		}
 
@@ -737,4 +719,40 @@ void LevelScene::collectKeys()
 		}
 	}
 	keys.clear();
+}
+
+void LevelScene::clearLevel() {
+	// 1. Clear Enemies
+	for (Enemy* e : enemies) delete e;
+	enemies.clear();
+
+	// 2. Clear Items/Keys
+	for (Key* k : keys) delete k;
+	keys.clear();
+
+	for (Entity* i : items) delete i;
+	items.clear();
+
+	// 3. Clear Weights
+	for (Weight* w : weights) delete w;
+	weights.clear();
+
+	// 4. Clear Projectiles and Placed Objects
+	for (Bullet* b : bulletsFired) delete b;
+	bulletsFired.clear();
+
+	for (Bomb* b : bombsPlaced) delete b;
+	bombsPlaced.clear();
+
+	// 5. Clear Static Level Entities
+	for (Stairs* s : stairs) delete s;
+	stairs.clear();
+
+	for (Door* d : doors) delete d;
+	doors.clear();
+
+	// Reset state variables
+	stairCooldown = 0.0f;
+	enteringDoor = false;
+	pendingDoor = nullptr;
 }
