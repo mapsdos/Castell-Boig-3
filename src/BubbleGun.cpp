@@ -1,5 +1,11 @@
 #include "BubbleGun.h"
 
+Entity* BubbleGun::clone(ShaderProgram& program) const {
+    BubbleGun* bg = new BubbleGun();
+    bg->init(position, program);
+    return bg;
+}
+
 void BubbleGun::init(const glm::vec2& pos, ShaderProgram& program) {
     position = pos;
     position.y += 8;

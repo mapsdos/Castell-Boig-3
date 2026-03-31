@@ -1,4 +1,7 @@
 #include "Door.h"
+#include "ShaderProgram.h"
+Entity* Door::clone(ShaderProgram&) const { return nullptr; }
+
 
 // In Key.cpp
 void Door::init(const glm::vec2& pos, ShaderProgram& program) {

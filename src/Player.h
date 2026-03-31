@@ -32,13 +32,17 @@ public:
 	bool isGodMode() const { return godMode; }
 	Sprite* getSprite() const { return sprite; }
 	void stopJumping();
+	void startHurtAnimation(bool enemyToRight);
+	void updateHurtLogic(int deltaTime);
+	bool isHurting()    const { return bHurting; }
+	bool isInvincible() const { return invincibilityTimer > 0.f; }
+	static const float HURT_DURATION;         // 625ms = 5 frames @ 8fps
+	static const float INVINCIBILITY_DURATION;
 	void startDoorEnterAnimation();
-
 	void addBullet() { ++bullets; };
 	void addBomb() { ++bombs; };
 
 	void playerEvent(LevelScene* levelScene, int deltaTime);
-
 private:
 	void handleClimbing();
 	bool handleHorizontalMovement();
@@ -50,6 +54,7 @@ private:
 
 	ShaderProgram* program;
 	bool bFloating = false;
+	bool bJumping = false;
 	glm::ivec2 tileMapDispl, posPlayer;
 	int jumpAngle, startY;
 	Texture spritesheet;
@@ -57,6 +62,11 @@ private:
 	Sprite* sprite;
 	Sprite* spriteStand;
 	TileMap* map;
+
+	bool  bHurting = false;
+	float knockbackVelX = 0.f;
+	float hurtTimer = 0.f;
+	float invincibilityTimer = 0.f;
 
 	int lives;
 	Texture heartTexture;

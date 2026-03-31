@@ -1,5 +1,11 @@
 #include "Clock.h"
 
+Entity* Clock::clone(ShaderProgram& program) const {
+    Clock* c = new Clock();
+    c->init(position, program);
+    return c;
+}
+
 void Clock::init(const glm::vec2& pos, ShaderProgram& program) {
     position = pos;
     position.y += 16.0f;

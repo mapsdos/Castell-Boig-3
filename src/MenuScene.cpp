@@ -24,12 +24,17 @@ MenuScene::MenuScene()
 	titleSprite = nullptr;
 	backgroundSprite = nullptr;
 	handSprite = nullptr;
+	fadeSprite = nullptr;
 
 	isAnimating = false;
 	animFrame = 0;
 	animTimer = 0.0f;
 	animElapsed = 0.0f;
-	waitForEnterRelease = false;  // NEW
+	waitForEnterRelease = false;
+	
+	fadingToGame = false;
+	fadeToGameTimer = 0.0f;
+	fadeToGameAlpha = 0.0f;
 }
 
 MenuScene::~MenuScene()
@@ -37,6 +42,7 @@ MenuScene::~MenuScene()
 	if (titleSprite != nullptr) delete titleSprite;
 	if (backgroundSprite != nullptr) delete backgroundSprite;
 	if (handSprite != nullptr) delete handSprite;
+	if (fadeSprite != nullptr) delete fadeSprite;
 
 	for (auto& button : buttons) {
 		if (button.sprite != nullptr) delete button.sprite;
@@ -174,6 +180,34 @@ void MenuScene::loadAnimationFrames()
 
 void MenuScene::init()
 {
+	// Reset animation states each time menu is entered
+	isAnimating = false;
+	animFrame = 0;
+	animTimer = 0.0f;
+	animElapsed = 0.0f;
+	waitForEnterRelease = false;
+	fadingToGame = false;
+	fadeToGameTimer = 0.0f;
+	fadeToGameAlpha = 0.0f;
+	selectedButton = 0;
+	pressedButton = -1;
+	pressTime = 0.0f;
+	keyCooldown = 0;
+
+	// Reset button animations to selected state for first button
+	for (int i = 0; i < (int)buttons.size(); i++) {
+		if (i == 0) {
+			buttons[i].sprite->changeAnimation(2); // selected animation
+			buttons[i].animState = 2;
+		} else {
+			buttons[i].sprite->changeAnimation(0); // normal animation
+			buttons[i].animState = 0;
+		}
+	}
+
+	// Only initialize resources once (first time)
+	if (backgroundSprite != nullptr) return;
+
 	initShaders();
 
 	projection = glm::ortho(0.f, 80.f, 60.f, 0.f);
@@ -246,6 +280,17 @@ void MenuScene::init()
 	}
 
 	loadAnimationFrames();
+
+	// Fade sprite (1x1 white pixel scaled to screen)
+	if (fadeTexture.loadFromFile("assets/images/white.png", TEXTURE_PIXEL_FORMAT_RGBA)) {
+		fadeSprite = Sprite::createSprite(
+			glm::vec2(80.f, 60.f),
+			glm::vec2(1.0f, 1.0f),
+			&fadeTexture,
+			&texProgram
+		);
+		fadeSprite->setPosition(glm::vec2(0.f, 0.f));
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -255,6 +300,21 @@ void MenuScene::init()
 void MenuScene::update(int deltaTime)
 {
 	currentTime += deltaTime;
+
+	// =========================================================
+	// FADE TO GAME
+	// =========================================================
+	if (fadingToGame) {
+		fadeToGameTimer += deltaTime;
+		fadeToGameAlpha = fadeToGameTimer / FADE_TO_GAME_DURATION;
+		if (fadeToGameAlpha > 1.0f) fadeToGameAlpha = 1.0f;
+		
+		if (fadeToGameTimer >= FADE_TO_GAME_DURATION) {
+			fadingToGame = false;
+			Game::instance().changeState(PLAYING);
+		}
+		return;
+	}
 
 	// =========================================================
 	// ANIMATION MODE
@@ -282,8 +342,11 @@ void MenuScene::update(int deltaTime)
 		// Step 2: now a *fresh* ENTER press or the timeout can transition to the game
 		bool autoSkip = (animElapsed >= AUTO_SKIP_DELAY);
 		if (enterCurrentlyHeld || autoSkip) {
+			// Start fade out instead of immediate transition
 			isAnimating = false;
-			Game::instance().changeState(PLAYING);
+			fadingToGame = true;
+			fadeToGameTimer = 0.0f;
+			fadeToGameAlpha = 0.0f;
 		}
 
 		return;
@@ -404,6 +467,27 @@ void MenuScene::render()
 	texProgram.setUniformMatrix4f("projection", projection);
 	texProgram.setUniformMatrix4f("modelview", modelview);
 	texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
+
+	// =========================================================
+	// FADE TO GAME - render last animation frame + fade overlay
+	// =========================================================
+	if (fadingToGame) {
+		// Show the last frame of animation
+		int lastFrame = ANIM_FRAME_COUNT - 1;
+		if (lastFrame < (int)animSprites.size() && animSprites[lastFrame] != nullptr)
+			animSprites[lastFrame]->render(modelview);
+		
+		// Render fade overlay
+		if (fadeSprite != nullptr) {
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			texProgram.setUniform4f("color", 0.0f, 0.0f, 0.0f, fadeToGameAlpha);
+			fadeSprite->render(modelview);
+			glDisable(GL_BLEND);
+			texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
+		}
+		return;
+	}
 
 	// =========================================================
 	// ANIMATION MODE

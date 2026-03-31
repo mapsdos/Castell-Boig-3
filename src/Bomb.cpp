@@ -1,5 +1,11 @@
 #include "Bomb.h"
 
+Entity* Bomb::clone(ShaderProgram& program) const {
+    Bomb* b = new Bomb();
+    b->init(position, program);
+    return b;
+}
+
 void Bomb::init(const glm::vec2& pos, ShaderProgram& program) {
     position = pos;
     position.y += 16.0f;

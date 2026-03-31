@@ -26,6 +26,7 @@ public:
 
 	// "override" tells the compiler these replace the base Scene versions
 	void init() override;
+	void init(string levelPath);
 	void update(int deltaTime) override;
 	void render() override;
 	glm::vec2 findDoorPosition(int numDoor);
@@ -33,6 +34,7 @@ public:
 	void setPlayer(Player* newPlayer);
 	TileMap* getMap() const { return map; }
 	void setDoorNum(int numDoor);
+	void LoadEnemies();
 
 	int totalNumKeys();
 	void collectKeys();
@@ -48,7 +50,8 @@ private:
 	TileMap* map;
 	Player* player;
 	std::vector<Key*> keys;
-	std::vector<Entity*>items;
+	std::vector<Entity*> items;
+	std::vector<Entity*> initialItems;
 	std::vector<Stairs*> stairs;
 	std::vector<Door*> doors;
 	std::vector<Enemy*> enemies;
@@ -62,6 +65,27 @@ private:
 	float  enterAnimTimer = 0.f;
 	const float ENTER_ANIM_DURATION = 375.f; // 3 frames × (1000/8) ms
 	Door* pendingDoor = nullptr;
+	// ── Hit / Death state ──────────────────────────────────────────────────
+	bool  playerHurting = false;
+	bool  hurtPaused = false;      // pausa en el último frame de la animación hurt
+	float hurtPauseTimer = 0.f;
+	bool  fadingOut = false;
+	bool  youDied = false;          // muestra filtro gris + "you died"
+	bool  youDiedFading = false;    // fade out después de "you died"
+	float fadeAlpha = 0.f;
+	float fadeTimer = 0.f;
+	float youDiedTimer = 0.f;
+
+	const float HURT_PAUSE_DURATION = 500.f;  // pausa en último frame antes del fade
+	const float FADE_DURATION = 1000.f;
+	const float YOU_DIED_DURATION = 2000.f;   // tiempo mostrando "you died" con filtro gris
+	const float YOU_DIED_FADE_DURATION = 1000.f;  // fade out después de "you died"
+
+	// Overlay sprite (1×1 pixel blanco escalado a pantalla)
+	Sprite* fadeSprite = nullptr;
+	Texture  fadeTexture;
+	Sprite* youDiedSprite = nullptr;
+	Texture  youDiedTexture;
 	bool stoppedTime;
 	int timeStopped;
 	string path;

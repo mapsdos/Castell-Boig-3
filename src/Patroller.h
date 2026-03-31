@@ -3,8 +3,9 @@
 
 #include "Enemy.h"
 
-class Patroller : public Enemy
-{
+class Patroller : public Enemy {
+public:
+    Entity* clone(ShaderProgram&) const override;
 public:
 	void init(const glm::vec2& pos, ShaderProgram& program) override;
 	void update(int deltaTime) override;

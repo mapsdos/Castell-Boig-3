@@ -1,4 +1,7 @@
 #include "Stairs.h"
+#include "ShaderProgram.h"
+Entity* Stairs::clone(ShaderProgram&) const { return nullptr; }
+
 
 void Stairs::init(const glm::vec2& pos, ShaderProgram& program) {
     position = pos; // Inherited from Entity

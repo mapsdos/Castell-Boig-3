@@ -71,6 +71,14 @@ private:
 	// immediately skipping it on the very next update tick.
 	bool waitForEnterRelease;
 
+	// ===== FADE OUT TO GAME =====
+	bool fadingToGame;
+	float fadeToGameTimer;
+	float fadeToGameAlpha;
+	const float FADE_TO_GAME_DURATION = 500.0f;
+	Sprite* fadeSprite;
+	Texture fadeTexture;
+
 	std::vector<Texture*> animTextures;
 	std::vector<Sprite*>  animSprites;
 };

@@ -3,8 +3,9 @@
 
 #include "Entity.h"
 
-class Stairs : public Entity
-{
+class Stairs : public Entity {
+public:
+    Entity* clone(ShaderProgram&) const override;
 public:
     void init(const glm::vec2& pos, ShaderProgram& program) override;
     void update(int deltaTime) override;

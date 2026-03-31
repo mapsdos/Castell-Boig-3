@@ -4,8 +4,9 @@
 #include "Enemy.h"
 #include "Bullet.h"
 
-class Shooter : public Enemy
-{
+class Shooter : public Enemy {
+public:
+    Entity* clone(ShaderProgram&) const override;
 public:
 	void init(const glm::vec2& pos, ShaderProgram& program) override;
 	void update(int deltaTime) override;
@@ -14,6 +15,7 @@ public:
 	void update(int deltaTime, const std::vector<Weight*> weights);
 
 	void Shoot(int deltaTime, ShaderProgram& program);
+	const std::vector<Bullet*>& getBullets() const { return bullets; }
 
 private:
 	int movementTimer = 1000;

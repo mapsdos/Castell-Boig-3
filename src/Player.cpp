@@ -11,6 +11,8 @@
 
 const float Player::GOD_ACTIVATE_DURATION = 875.f; // 7 frames × (1000/8) ms
 const int   Player::HOVER_PIXELS = 4;
+const float Player::HURT_DURATION = 625.f;  // 5 frames × (1000/8) ms
+const float Player::INVINCIBILITY_DURATION = 1500.f;
 
 enum PlayerAnims
 {
@@ -19,7 +21,9 @@ enum PlayerAnims
 	GOD_ACTIVATE_RIGHT,  // frames 32-38
 	GOD_MOVE_RIGHT,      // frame 38 (estático)
 	GOD_ACTIVATE_LEFT,   // frames 39-45
-	GOD_MOVE_LEFT        // frame 45 (estático)
+	GOD_MOVE_LEFT,        // frame 45 (estático)
+	HURT_FROM_RIGHT,
+	HURT_FROM_LEFT
 };
 
 
@@ -100,7 +104,7 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 
 	float widthFrame = 24.0f;
 	float heightFrame = 32.0f;
-	int   numFrames = 46; // 32 originales + 14 god mode
+	int   numFrames = 56;
 	float frameWidthUV = 1.0f / numFrames;
 	float frameHeightUV = 1.0f;
 
@@ -113,7 +117,7 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 		glm::vec2(frameWidthUV, frameHeightUV),
 		&spritesheet, &shaderProgram
 	);
-	sprite->setNumberAnimations(13);
+	sprite->setNumberAnimations(15);
 
 	// ── Animaciones originales ─────────────────────────────────────────────
 	sprite->setAnimationSpeed(STAND_RIGHT, 8);
@@ -165,15 +169,72 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 	sprite->setAnimationSpeed(GOD_MOVE_LEFT, 8);
 	sprite->addKeyframe(GOD_MOVE_LEFT, glm::vec2(45 * frameWidthUV, 0.f)); // frame 45
 
+	sprite->setAnimationSpeed(HURT_FROM_RIGHT, 8);
+	for (int i = 46; i < 51; i++)
+		sprite->addKeyframe(HURT_FROM_RIGHT, glm::vec2(i * frameWidthUV, 0.f));
+
+	sprite->setAnimationSpeed(HURT_FROM_LEFT, 8);
+	for (int i = 51; i < 56; i++)
+		sprite->addKeyframe(HURT_FROM_LEFT, glm::vec2(i * frameWidthUV, 0.f));
+
 	sprite->changeAnimation(STAND_RIGHT);
 	tileMapDispl = tileMapPos;
 	sprite->setPosition(glm::vec2(tileMapDispl + posPlayer));
 }
 
+void Player::startHurtAnimation(bool enemyToRight)
+{
+	bHurting = true;
+	hurtTimer = 0.f;
+	bJumping = false;
+	// enemyToRight → el enemigo está a la derecha → el personaje sale hacia la izquierda
+	knockbackVelX = enemyToRight ? -0.10f : 0.10f;
+	sprite->changeAnimation(enemyToRight ? HURT_FROM_RIGHT : HURT_FROM_LEFT);
+	invincibilityTimer = INVINCIBILITY_DURATION;
+}
+
+void Player::updateHurtLogic(int deltaTime)
+{
+	hurtTimer += (float)deltaTime;
+
+	// Si la animación termina, forzar el último frame
+	if (hurtTimer >= HURT_DURATION) {
+		// 5 keyframes: forzar el último (índice 4)
+		sprite->setFrame(sprite->animation(), 4);
+		bHurting = false;
+		return;
+	}
+
+	sprite->update(deltaTime);
+
+	// Knockback horizontal con colisión
+	int dx = (int)(knockbackVelX * deltaTime);
+	posPlayer.x += dx;
+	if (knockbackVelX < 0.f && map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32)))
+		posPlayer.x -= dx;
+	else if (knockbackVelX > 0.f && map->collisionMoveRight(posPlayer, glm::ivec2(24, 32)))
+		posPlayer.x -= dx;
+
+	// Gravedad durante el knockback
+	posPlayer.y += FALL_STEP;
+	map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y);
+
+	sprite->setPosition(glm::vec2(tileMapDispl + posPlayer));
+}
+
 void Player::update(int deltaTime, bool wait)
 {
-	sprite->update(deltaTime);
+	if (invincibilityTimer > 0.f)
+		invincibilityTimer -= (float)deltaTime;
+
+	// Durante la animación de hurt, solo actualizar hearts, no procesar input/movimiento
 	for (int i = 0; i < 3; i++) heartSprites[i]->update(deltaTime);
+	
+	if (bHurting) {
+		return;  // updateHurtLogic es llamado por LevelScene
+	}
+
+	sprite->update(deltaTime);
 
 	// --- Toggle god mode (G Key) ---
 	bool gKeyDown = Game::instance().getKey(GLFW_KEY_G);
@@ -388,8 +449,7 @@ void Player::updateGravityLogic(bool moving)
 
 	if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y)) {
 		if (!moving) {
-			int standAnim = (sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT)
-				? STAND_LEFT : STAND_RIGHT;
+			int standAnim = facingLeft ? STAND_LEFT : STAND_RIGHT;
 			if (sprite->animation() != standAnim) sprite->changeAnimation(standAnim);
 		}
 	}

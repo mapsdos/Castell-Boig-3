@@ -23,6 +23,7 @@ LevelScene::LevelScene()
 	map = NULL;
 	player = NULL;
 	doorNum = 0;
+	path = "";
 }
 
 LevelScene::LevelScene(string setPath, Player* setPlayer)
@@ -44,7 +45,6 @@ LevelScene::~LevelScene()
 
 void LevelScene::init()
 {
-	clearLevel();
 	initShaders();
 	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 
@@ -53,6 +53,17 @@ void LevelScene::init()
 	doorNum = 0;
 	stoppedTime = false;
 	timeStopped = 0;
+
+	// Reset death/hurt states
+	playerHurting = false;
+	hurtPaused = false;
+	hurtPauseTimer = 0.f;
+	fadingOut = false;
+	fadeTimer = 0.f;
+	fadeAlpha = 0.f;
+	youDied = false;
+	youDiedTimer = 0.f;
+	youDiedFading = false;
 
 	glm::ivec2 size = map->getMapSize();
 	for (int j = 0; j < size.y; j++) {
@@ -71,7 +82,8 @@ void LevelScene::init()
 				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 
 				newKey->init(glm::vec2(x, y), texProgram);
-				keys.push_back(newKey);
+				items.push_back(newKey);
+				initialItems.push_back(newKey->clone(texProgram));
 			}
 			// Inside the tile loop where tileId == 4
 			else if (tileId == 4) {
@@ -195,16 +207,167 @@ void LevelScene::init()
 	player->setTileMap(map);
 	projection = glm::ortho(0.f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.f);
 	currentTime = 0.0f;
+
+	// Fade overlay: necesitas assets/images/white.png (1×1 píxel blanco)
+	fadeTexture.loadFromFile("assets/images/white.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	fadeSprite = Sprite::createSprite(glm::ivec2(640, 480), glm::vec2(1.f, 1.f),
+		&fadeTexture, &texProgram);
+	fadeSprite->setNumberAnimations(1);
+	fadeSprite->setAnimationSpeed(0, 1);
+	fadeSprite->addKeyframe(0, glm::vec2(0.f, 0.f));
+	fadeSprite->changeAnimation(0);
+	fadeSprite->setPosition(glm::vec2(0.f, 0.f));
+
+	// YOU DIED overlay: necesitas assets/images/you_died.png
+	youDiedTexture.loadFromFile("assets/images/you_died.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	youDiedSprite = Sprite::createSprite(glm::ivec2(650, 86), glm::vec2(1.f, 1.f),
+		&youDiedTexture, &texProgram);
+	youDiedSprite->setNumberAnimations(1);
+	youDiedSprite->setAnimationSpeed(0, 1);
+	youDiedSprite->addKeyframe(0, glm::vec2(0.f, 0.f));
+	youDiedSprite->changeAnimation(0);
+	youDiedSprite->setPosition(glm::vec2(0.f, 197.f));
+
+	LoadEnemies();
+}
+
+void LevelScene::LoadEnemies()
+{
+	// Limpiar enemigos existentes para evitar duplicados
+	for (auto* e : enemies) delete e;
+	enemies.clear();
+
+	Patroller* patroller = new Patroller();
+	patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+    patroller->setPosition(glm::vec2(10 * map->getTileSize(), 25 * map->getTileSize()));
+    patroller->setTileMap(map);
+	enemies.push_back(patroller);
+
+	Shooter* shooter= new Shooter();
+	shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	shooter->setPosition(glm::vec2(10 * map->getTileSize(), 25 * map->getTileSize()));
+	shooter->setTileMap(map);
+	enemies.push_back(shooter);
+
+	Follower* follower = new Follower();
+	follower->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+	follower->setPosition(glm::vec2(10 * map->getTileSize(), 25 * map->getTileSize()));
+	follower->setTileMap(map);
+	enemies.push_back(follower);
 }
 
 void LevelScene::update(int deltaTime)
 {
-	currentTime += deltaTime;
+    currentTime += deltaTime;
 
-	if (enteringDoor)
-	{
-		player->getSprite()->update(deltaTime);   // animation keeps playing
-		enterAnimTimer += deltaTime;
+    // ── YOU DIED FADE: fade out después de mostrar "you died" ──────────
+    if (youDiedFading)
+    {
+        fadeTimer += deltaTime;
+        fadeAlpha = glm::clamp(fadeTimer / YOU_DIED_FADE_DURATION, 0.f, 1.f);
+        if (fadeTimer >= YOU_DIED_FADE_DURATION)
+            Game::instance().changeState(MAIN_MENU);
+        return;
+    }
+
+    // ── YOU DIED: muestra filtro gris + imagen, luego fade ─────────────
+    if (youDied)
+    {
+        youDiedTimer += deltaTime;
+        if (youDiedTimer >= YOU_DIED_DURATION)
+        {
+            youDied = false;
+            youDiedFading = true;
+            fadeTimer = 0.f;
+            fadeAlpha = 0.f;
+        }
+        return;
+    }
+
+    // ── Fade out tras perder vida (no última) ──────────────────────────
+    if (fadingOut)
+    {
+        fadeTimer += deltaTime;
+        fadeAlpha = glm::clamp(fadeTimer / FADE_DURATION, 0.f, 1.f);
+
+        if (fadeTimer >= FADE_DURATION)
+        {
+            // Reiniciar escena con una vida menos guardada
+            int livesLeft = player->getLives();
+            delete player;
+            player = nullptr;
+
+            // Re-inicializar la escena
+            for (auto* e : enemies) delete e;
+            enemies.clear();
+            for (auto* it : items)  delete it;
+            items.clear();
+            // Restaurar items al estado inicial
+            for (auto* orig : initialItems) items.push_back(orig->clone(texProgram));
+
+            // Recrear player
+            player = new Player();
+            player->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+            player->setPosition(glm::vec2(INIT_PLAYER_X_TILES * map->getTileSize(),
+                INIT_PLAYER_Y_TILES * map->getTileSize()));
+            player->setTileMap(map);
+            player->setLives(livesLeft);
+
+            LoadEnemies();
+
+            fadingOut = false;
+            playerHurting = false;
+            hurtPaused = false;
+            hurtPauseTimer = 0.f;
+            fadeAlpha = 0.f;
+            fadeTimer = 0.f;
+        }
+        return;
+    }
+
+    // ── Hurt pause: el juego se congela en el último frame antes del fade ──
+    if (hurtPaused)
+    {
+        hurtPauseTimer += deltaTime;
+        if (hurtPauseTimer >= HURT_PAUSE_DURATION)
+        {
+            hurtPaused = false;
+            if (player->getLives() <= 0)
+            {
+                // Sin vidas → mostrar "you died" con filtro gris
+                youDied = true;
+                youDiedTimer = 0.f;
+            }
+            else
+            {
+                // Aún quedan vidas → fade out y reiniciar
+                fadingOut = true;
+                fadeTimer = 0.f;
+                fadeAlpha = 0.f;
+            }
+        }
+        return;
+    }
+
+    // ── Hurt freeze: solo knockback del personaje ──────────────────────
+    if (playerHurting)
+    {
+        player->updateHurtLogic(deltaTime);
+        if (!player->isHurting())
+        {
+            // La animación de hurt terminó, ahora pausamos en el último frame
+            playerHurting = false;
+            hurtPaused = true;
+            hurtPauseTimer = 0.f;
+        }
+        return;
+    }
+
+    // ── Door-entry freeze ──────────────────────────────────────────────
+    if (enteringDoor)
+    {
+        player->getSprite()->update(deltaTime);
+        enterAnimTimer += deltaTime;
 
 		if (enterAnimTimer >= ENTER_ANIM_DURATION && pendingDoor != nullptr)
 		{
@@ -222,7 +385,7 @@ void LevelScene::update(int deltaTime)
 				player->setPosition(doorPos - glm::vec2(SCREEN_X, SCREEN_Y));
 
 				targetScene->setCooldown();
-				Game::instance().setScene(pendingDoor->getRoom());
+				Game::instance().setScene(targetScene);
 
 				// Reset state for when we return to this scene later
 				enteringDoor = false;
@@ -231,7 +394,7 @@ void LevelScene::update(int deltaTime)
 			}
 			else
 			{
-				KeyDoor* kd = static_cast<KeyDoor*> (pendingDoor);
+				KeyDoor* kd = static_cast<KeyDoor*>(pendingDoor);
 				Game::instance().getNextLevel(this);
 			}
 		}
@@ -241,24 +404,20 @@ void LevelScene::update(int deltaTime)
 	if (stairCooldown > 0)
 		stairCooldown -= deltaTime;
 
-	// 1. Calculate player bounds
-	float playerWorldX = player->getPosition().x + SCREEN_X;
-	float playerWorldY = player->getPosition().y + SCREEN_Y;
-	float pL = playerWorldX + 4;
-	float pR = playerWorldX + 28;
-	float pT = playerWorldY + 4;
-	float pB = playerWorldY + 28;
+    float playerWorldX = player->getPosition().x + SCREEN_X;
+    float playerWorldY = player->getPosition().y + SCREEN_Y;
+    float pL = playerWorldX + 4;
+    float pR = playerWorldX + 20;
+    float pT = playerWorldY + 4;
+    float pB = playerWorldY + 28;
 
-	// 2. Check Doors (Room Transitions)
-	for (Door* d : doors)
-	{
-		// Centro del jugador
-		float pCenterX = player->getPosition().x + SCREEN_X + 12.f; // 12 = mitad de 24px
-		float pCenterY = player->getPosition().y + SCREEN_Y + 16.f; // 16 = mitad de 32px
-
-		// Centro de la puerta
-		float dCenterX = d->getPosition().x + 16.f;
-		float dCenterY = d->getPosition().y + 16.f;
+    // Doors
+    for (Door* d : doors)
+    {
+        float pCenterX = player->getPosition().x + SCREEN_X + 12.f;
+        float pCenterY = player->getPosition().y + SCREEN_Y + 16.f;
+        float dCenterX = d->getPosition().x + 16.f;
+        float dCenterY = d->getPosition().y + 16.f;
 
 		float distX = abs(pCenterX - dCenterX);
 		float distY = abs(pCenterY - dCenterY);
@@ -269,7 +428,7 @@ void LevelScene::update(int deltaTime)
 		{
 			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0)
 			{
-				if ((d->getKind() == DoorType::OPENDOOR && d->getRoom() != nullptr) || (d->getKind() == DoorType::KEYDOOR && totalNumKeys() == 0 ))
+				if (d->getRoom() != nullptr)
 				{
 					pendingDoor = d;
 					enteringDoor = true;
@@ -281,46 +440,27 @@ void LevelScene::update(int deltaTime)
 		}
 	}
 
-	// 3. Check Stairs (Same-map teleportation)
-	for (Stairs* s : stairs) {
-		float sL = s->getPosition().x;
-		float sR = sL + 32;
-		float sT = s->getPosition().y;
-		float sB = sT + 32;
-
-		if (pL < sR && pR > sL && pT < sB && pB > sT) {
-			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0) {
-				glm::vec2 dest = s->getDestination();
-				player->setPosition(dest - glm::vec2(SCREEN_X, SCREEN_Y + 1));
-				stairCooldown = STAIR_DELAY;
-				return;
-			}
-		}
-	}
+    // Stairs
+    for (Stairs* s : stairs)
+    {
+        float sL = s->getPosition().x, sR = sL + 32;
+        float sT = s->getPosition().y, sB = sT + 32;
+        if (pL < sR && pR > sL && pT < sB && pB > sT)
+        {
+            if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0)
+            {
+                glm::vec2 dest = s->getDestination();
+                player->setPosition(dest - glm::vec2(SCREEN_X, SCREEN_Y + 1));
+                stairCooldown = STAIR_DELAY;
+                return;
+            }
+        }
+    }
 
 	// 4. Player Update (with input lock if cooldown is active)
 	player->update(deltaTime, (stairCooldown > 0));
-	player->playerEvent(this, deltaTime);
 
-	// 5. Items updates
-	// 5.1 Keys
-	for (auto it = keys.begin(); it != keys.end(); ) {
-		float iL = (*it)->getPosition().x;
-		float iR = iL + 32;
-		float iT = (*it)->getPosition().y;
-		float iB = iT + 32;
-
-		if (pL < iR && pR > iL && pT < iB && pB > iT) {
-			delete* it;
-			it = keys.erase(it);
-		}
-		else {
-			(*it)->update(deltaTime);
-			++it;
-		}
-	}
-
-	// Other items
+	// 5. Item updates
 	for (auto it = items.begin(); it != items.end(); ) {
 		float iL = (*it)->getPosition().x;
 		float iR = iL + 32;
@@ -328,27 +468,7 @@ void LevelScene::update(int deltaTime)
 		float iB = iT + 32;
 
 		if (pL < iR && pR > iL && pT < iB && pB > iT) {
-			if (dynamic_cast<BubbleGun*>(*it) != nullptr)
-			{
-				player->addBullet();
-			}
-			else
-			{
-				Bomb* bomb = dynamic_cast<Bomb*>(*it);
-				if (bomb != nullptr)
-				{
-					player->addBomb();
-				}
-				else
-				{
-					if (dynamic_cast<Clock*>(*it) != nullptr)
-					{
-						stoppedTime = true;
-						timeStopped = 5000;
-					}
-				}
-			}
-			delete *it;
+			delete* it;
 			it = items.erase(it);
 		}
 		else {
@@ -356,79 +476,74 @@ void LevelScene::update(int deltaTime)
 			++it;
 		}
 	}
-	for (auto bullet : bulletsFired)
-	{
-		bullet->update(deltaTime);
-	}
-	for (auto bomb : bombsPlaced)
-	{
-		bomb->update(deltaTime);
-	}
 
-	for (auto w = weights.begin(); w != weights.end();) {
-		float pL = player->getPosition().x + SCREEN_X;
-		float pR = pL + 24; // Player width
-		float wL = (*w)->getPosition().x;
-		float wR = wL + 16; // Weight width
+	// Enemy updates
+	for (Enemy* e : enemies) {
+		Follower* follower = dynamic_cast<Follower*>(e);
 
-		// Vertical overlap check
-		float pT = player->getPosition().y + SCREEN_Y;
-		float pB = pT + 32;
-		float wT = (*w)->getPosition().y;
-		float wB = wT + 16;
-
-		if (pB > wT && pT < wB) { // If at the same height
-			// If Player hits left side of weight while moving right
-			if ((pR - 2) > wL && pL < wL && Game::instance().getKey(GLFW_KEY_RIGHT)) {
-				(*w)->push(2.0f); // Match player speed
-			}
-			// If Player hits right side of weight while moving left
-			else if ((pL + 8) < wR && pR > wR && Game::instance().getKey(GLFW_KEY_LEFT)) {
-				(*w)->push(-2.0f);
-			}
-		}
-		(*w)->update(deltaTime);
-		if ((*w)->getFell())
+		if (follower != nullptr)
 		{
-			delete *w;
-			w = weights.erase(w);
+			follower->update(deltaTime, player->getPosition(), weights);
 		}
 		else
 		{
-			w++;
-		}
-	}
+			// 1. Try to cast the generic Enemy to a Shooter
+			Shooter* shooter = dynamic_cast<Shooter*>(e);
 
-	// Enemy updates
-	if (stoppedTime && timeStopped < 0)
-	{
-		stoppedTime = false;
-	}
-	timeStopped -= deltaTime;
-	if (!stoppedTime)
-	{
-		for (Enemy* e : enemies) {
-			Follower* follower = dynamic_cast<Follower*>(e);
-
-			if (follower != nullptr)
-			{
-				follower->update(deltaTime, player->getPosition(), weights);
+			// 2. If the cast succeeded, shooter will not be NULL
+			if (shooter != nullptr) {
+				// Now you can access Shooter-specific functions
+				shooter->Shoot(deltaTime, texProgram);
+				shooter->update(deltaTime, weights);
 			}
 			else
 			{
-				// 1. Try to cast the generic Enemy to a Shooter
-				Shooter* shooter = dynamic_cast<Shooter*>(e);
+				Patroller* patroller = static_cast<Patroller*>(e);
+				patroller->update(deltaTime, weights);
+			}
+		}
 
-				// 2. If the cast succeeded, shooter will not be NULL
-				if (shooter != nullptr) {
-					// Now you can access Shooter-specific functions
-					shooter->Shoot(deltaTime, texProgram);
-					shooter->update(deltaTime, weights);
-				}
-				else
+		// ── Colisión enemigo → jugador ─────────────────────────────────
+		if (!player->isInvincible() && !player->isGodMode())
+		{
+			glm::vec2 ePos = e->getPosition();
+			float eWorldX = ePos.x + SCREEN_X;
+			float eWorldY = ePos.y + SCREEN_Y;
+			float eL = eWorldX + 4, eR = eWorldX + 28;
+			float eT = eWorldY + 4, eB = eWorldY + 28;
+
+			if (pL < eR && pR > eL && pT < eB && pB > eT)
+			{
+				bool enemyToRight = (eWorldX + 16.f) > (playerWorldX + 12.f);
+				player->receiveDamage(1);
+				player->startHurtAnimation(enemyToRight);
+				playerHurting = true;
+				return;
+			}
+		}
+	}
+
+	// ── Colisión balas → jugador ───────────────────────────────────────
+	if (!player->isInvincible() && !player->isGodMode())
+	{
+		for (Enemy* e : enemies)
+		{
+			Shooter* shooter = dynamic_cast<Shooter*>(e);
+			if (!shooter) continue;
+
+			for (Bullet* b : shooter->getBullets())
+			{
+				glm::vec2 bPos = b->getPosition();
+				float bL = bPos.x, bR = bPos.x + 8.f;
+				float bT = bPos.y, bB = bPos.y + 8.f;
+
+				if (pL < bR && pR > bL && pT < bB && pB > bT)
 				{
-					Patroller* patroller = static_cast<Patroller*>(e);
-					patroller->update(deltaTime, weights);
+					bool bulletFromLeft = b->isMovingRight();
+					player->receiveDamage(1);
+					player->startHurtAnimation(!bulletFromLeft);
+					playerHurting = true;
+					return;
 				}
 			}
 		}
@@ -529,6 +644,51 @@ void LevelScene::render()
 		weight->render(modelview);
 	}
 	player->render(modelview);
+    // ── Overlays (en espacio de pantalla, sin cámara) ──────────────────
+    if (fadingOut || youDied || youDiedFading)
+    {
+        glm::mat4 identity = glm::mat4(1.0f);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        texProgram.setUniformMatrix4f("modelview", identity);
+        // Proyección ortho simple para pantalla completa
+        glm::mat4 screenProj = glm::ortho(0.f, 640.f, 480.f, 0.f);
+        texProgram.setUniformMatrix4f("projection", screenProj);
+
+        if (fadingOut)
+        {
+            // Fade negro normal al perder una vida
+            texProgram.setUniform4f("color", 0.f, 0.f, 0.f, fadeAlpha);
+            fadeSprite->render(identity);
+        }
+        
+        if (youDied)
+        {
+            // Filtro gris semi-transparente sobre la escena
+            texProgram.setUniform4f("color", 0.3f, 0.3f, 0.3f, 0.4f);
+            fadeSprite->render(identity);
+            // Imagen "YOU DIED" encima
+            texProgram.setUniform4f("color", 1.f, 1.f, 1.f, 1.f);
+            youDiedSprite->render(identity);
+        }
+        
+        if (youDiedFading)
+        {
+            // Mantener filtro gris + you died, y añadir fade negro encima
+            texProgram.setUniform4f("color", 0.3f, 0.3f, 0.3f, 0.4f);
+            fadeSprite->render(identity);
+            texProgram.setUniform4f("color", 1.f, 1.f, 1.f, 1.f);
+            youDiedSprite->render(identity);
+            // Fade negro encima de todo
+            texProgram.setUniform4f("color", 0.f, 0.f, 0.f, fadeAlpha);
+            fadeSprite->render(identity);
+        }
+
+        glDisable(GL_BLEND);
+        // Restaurar color
+        texProgram.setUniform4f("color", 1.f, 1.f, 1.f, 1.f);
+    }
 }
 
 void LevelScene::setDoorNum(int numDoor)

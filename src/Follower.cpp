@@ -1,4 +1,7 @@
 #include "Follower.h"
+#include "ShaderProgram.h"
+Entity* Follower::clone(ShaderProgram&) const { return nullptr; }
+
 #include <iostream>
 #include <algorithm>
 

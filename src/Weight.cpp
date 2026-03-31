@@ -1,5 +1,12 @@
 #include "Weight.h"
 
+Entity* Weight::clone(ShaderProgram& program) const {
+    Weight* w = new Weight();
+    w->init(position, program);
+    w->setTileMap(map);
+    return w;
+}
+
 void Weight::init(const glm::vec2& pos, ShaderProgram& program)
 {
     position = pos;

@@ -2,6 +2,8 @@
 #include "Weight.h"
 #include <iostream>
 
+Entity* Shooter::clone(ShaderProgram&) const { return nullptr; }
+
 void Shooter::init(const glm::vec2& pos, ShaderProgram& program) {
     Enemy::init(pos, program); // Call base init to set position
     movementTimer = 1000;
