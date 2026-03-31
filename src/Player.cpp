@@ -3,6 +3,7 @@
 #include "GraphicsConfig.h"
 #include "Player.h"
 #include "Game.h"
+#include "LevelScene.h"
 
 #define JUMP_ANGLE_STEP 4
 #define JUMP_HEIGHT     96
@@ -28,8 +29,9 @@ enum PlayerAnims
 
 Player::Player()
 {
-	sprite = NULL;
-	map = NULL;
+	program = nullptr;
+	sprite = nullptr;
+	map = nullptr;
 }
 
 Player::~Player()
@@ -75,6 +77,7 @@ void Player::heal(int amount)
 
 void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 {
+	program = &shaderProgram;
 	lives = 3;
 	heartTexture.loadFromFile("assets/images/hearts.png", TEXTURE_PIXEL_FORMAT_RGBA);
 	float heartWidthUV = 12.0f / 24.0f;
@@ -105,7 +108,9 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 	float frameWidthUV = 1.0f / numFrames;
 	float frameHeightUV = 1.0f;
 
-	bJumping = false;
+	bullets = bombs = actionTimer = 0;
+
+	bFloating = false;
 	spritesheet.loadFromFile("assets/images/sprites bob.png", TEXTURE_PIXEL_FORMAT_RGBA);
 	sprite = Sprite::createSprite(
 		glm::ivec2(widthFrame, heightFrame),
@@ -222,26 +227,29 @@ void Player::update(int deltaTime, bool wait)
 	if (invincibilityTimer > 0.f)
 		invincibilityTimer -= (float)deltaTime;
 
-	sprite->update(deltaTime);
+	// Durante la animación de hurt, solo actualizar hearts, no procesar input/movimiento
 	for (int i = 0; i < 3; i++) heartSprites[i]->update(deltaTime);
+	
+	if (bHurting) {
+		return;  // updateHurtLogic es llamado por LevelScene
+	}
 
-	// ── Toggle god mode en flanco de subida de G ───────────────────────────
+	sprite->update(deltaTime);
+
+	// --- Toggle god mode (G Key) ---
 	bool gKeyDown = Game::instance().getKey(GLFW_KEY_G);
-	if (gKeyDown && !prevGKeyDown)
-	{
+	if (gKeyDown && !prevGKeyDown) {
 		godMode = !godMode;
-		if (godMode)
-		{
-			bJumping = false;
+		bFloating = false; // Reset state on toggle
+		if (godMode) {
 			godModeActivating = true;
 			godModeActivationTimer = 0.f;
-			godHoverOffset = 0;
 			sprite->changeAnimation(facingLeft ? GOD_ACTIVATE_LEFT : GOD_ACTIVATE_RIGHT);
 		}
-		else
-		{
+		else {
 			godModeActivating = false;
 			godHoverOffset = 0;
+			bFloating = false;
 			sprite->changeAnimation(facingLeft ? STAND_LEFT : STAND_RIGHT);
 		}
 	}
@@ -249,29 +257,44 @@ void Player::update(int deltaTime, bool wait)
 
 	if (!wait)
 	{
-		if (godMode)
-		{
+		// 1. Pre-check: Are we touching a floor right now?
+		int tileAtCenter = map->getTileIdAt(posPlayer + glm::ivec2(12, 16));
+		int tileUnderFeet = map->getTileIdAt(posPlayer + glm::ivec2(12, 32));
+
+		// 2. Determine if we should be climbing
+		if (tileAtCenter == 3 && (Game::instance().getKey(GLFW_KEY_UP) || tileUnderFeet != 1)) {
+			bFloating = false; // Cancel bubble-tile floating if grabbing a vine
+			handleClimbing();
+
+			// God Mode Visual override for vines
+			if (godMode && !godModeActivating) {
+				int godAnim = facingLeft ? GOD_MOVE_LEFT : GOD_MOVE_RIGHT;
+				if (sprite->animation() != godAnim) sprite->changeAnimation(godAnim);
+			}
+		}
+		else if (godMode) {
 			updateGodModeLogic(deltaTime);
 		}
-		else
-		{
-			int tileId = map->getTileIdAt(posPlayer + glm::ivec2(12, 30));
-			if (tileId == 3) handleClimbing();
+		else {
+			// Normal Mode: Bubble Tile vs. Regular Movement
+			if (tileUnderFeet == 6 && Game::instance().getKey(GLFW_KEY_UP)) {
+				bFloating = true;
+			}
+
+			if (bFloating) {
+				updateFloatingLogic();
+			}
 			else {
 				bool moving = handleHorizontalMovement();
-				if (bJumping) updateJumpLogic(moving);
-				else          updateGravityLogic(moving);
+				updateGravityLogic(moving);
 			}
 		}
 	}
-
-	// Posición del sprite: desplazamiento visual de levitación solo en god mode
 	sprite->setPosition(glm::vec2(tileMapDispl + posPlayer) - glm::vec2(0.f, (float)godHoverOffset));
 }
 
 void Player::updateGodModeLogic(int deltaTime)
 {
-	// ── Fase de activación: esperar a que termine la animación ─────────────
 	if (godModeActivating)
 	{
 		godModeActivationTimer += deltaTime;
@@ -280,35 +303,30 @@ void Player::updateGodModeLogic(int deltaTime)
 			godModeActivating = false;
 			sprite->changeAnimation(facingLeft ? GOD_MOVE_LEFT : GOD_MOVE_RIGHT);
 		}
-		return; // sin movimiento durante la activación
+		return;
 	}
 
-	// ── Movimiento horizontal ──────────────────────────────────────────────
-	bool moving = false;
+	// ── Move without changing to normal animations ──
 	if (Game::instance().getKey(GLFW_KEY_LEFT))
 	{
 		facingLeft = true;
-		moving = true;
 		posPlayer.x -= 2;
-		if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32)))
-			posPlayer.x += 2;
+		if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32))) posPlayer.x += 2;
 	}
 	else if (Game::instance().getKey(GLFW_KEY_RIGHT))
 	{
 		facingLeft = false;
-		moving = true;
 		posPlayer.x += 2;
-		if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32)))
-			posPlayer.x -= 2;
+		if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32))) posPlayer.x -= 2;
 	}
 
-	// ── Animación: siempre el frame estático del god mode ─────────────────
+	// ── Force God Mode Animation ──
 	int godAnim = facingLeft ? GOD_MOVE_LEFT : GOD_MOVE_RIGHT;
 	if (sprite->animation() != godAnim)
 		sprite->changeAnimation(godAnim);
 
-	// ── Física: idéntica al modo normal ───────────────────────────────────
-	if (bJumping)
+	// ── God Jump Physics (using bFloating as the toggle) ──
+	if (bFloating)
 	{
 		jumpAngle += JUMP_ANGLE_STEP;
 		posPlayer.y = startY - (int)(JUMP_HEIGHT * sin(3.14159f * jumpAngle / 180.f));
@@ -316,9 +334,9 @@ void Player::updateGodModeLogic(int deltaTime)
 		if (jumpAngle > 90)
 		{
 			if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y))
-				stopJumping();
+				bFloating = false;
 		}
-		if (jumpAngle >= 180) stopJumping();
+		if (jumpAngle >= 180) bFloating = false;
 	}
 	else
 	{
@@ -327,29 +345,25 @@ void Player::updateGodModeLogic(int deltaTime)
 
 		if (onGround)
 		{
-			// Levitación: offset visual solo cuando está en el suelo y moviéndose
 			godHoverOffset = HOVER_PIXELS;
-
 			if (Game::instance().getKey(GLFW_KEY_UP))
 			{
-				bJumping = true;
+				bFloating = true;
 				jumpAngle = 0;
 				startY = posPlayer.y;
-				godHoverOffset = 0; // sin levitación mientras salta
+				godHoverOffset = 0;
 			}
 		}
-		else
-		{
-			godHoverOffset = 0; // en el aire no hay offset
-		}
+		else godHoverOffset = 0;
 	}
 }
 
 void Player::handleClimbing()
 {
-	bJumping = false;
+	bFloating = false;
 	bool movingVertically = false;
 
+	// Movement logic (Keep this active so we can actually move)
 	if (Game::instance().getKey(GLFW_KEY_UP)) {
 		int tileAbove = map->getTileIdAt(posPlayer + glm::ivec2(12, 8));
 		if (tileAbove == 3) { posPlayer.y -= 2; movingVertically = true; }
@@ -360,9 +374,14 @@ void Player::handleClimbing()
 		movingVertically = true;
 	}
 
-	int targetAnim = movingVertically ? CLIMB : HANG;
-	if (sprite->animation() != targetAnim) sprite->changeAnimation(targetAnim);
+	// --- ANIMATION GUARD ---
+	// Only change to CLIMB/HANG if we are NOT in god mode
+	if (!godMode) {
+		int targetAnim = movingVertically ? CLIMB : HANG;
+		if (sprite->animation() != targetAnim) sprite->changeAnimation(targetAnim);
+	}
 
+	// Horizontal movement on vines
 	if (Game::instance().getKey(GLFW_KEY_LEFT)) {
 		facingLeft = true;
 		posPlayer.x -= 1;
@@ -382,51 +401,45 @@ bool Player::handleHorizontalMovement()
 	if (Game::instance().getKey(GLFW_KEY_LEFT)) {
 		facingLeft = true;
 		moving = true;
-		if (sprite->animation() != MOVE_LEFT) sprite->changeAnimation(MOVE_LEFT);
+		// ONLY change to normal MOVE animation if NOT in god mode
+		if (!godMode && sprite->animation() != MOVE_LEFT) sprite->changeAnimation(MOVE_LEFT);
+
 		posPlayer.x -= 2;
 		if (map->collisionMoveLeft(posPlayer, glm::ivec2(24, 32))) {
 			posPlayer.x += 2;
-			if (!bJumping && sprite->animation() != STAND_LEFT) sprite->changeAnimation(STAND_LEFT);
+			if (!godMode && !bFloating && sprite->animation() != STAND_LEFT) sprite->changeAnimation(STAND_LEFT);
 		}
 	}
 	else if (Game::instance().getKey(GLFW_KEY_RIGHT)) {
 		facingLeft = false;
 		moving = true;
-		if (sprite->animation() != MOVE_RIGHT) sprite->changeAnimation(MOVE_RIGHT);
+		// ONLY change to normal MOVE animation if NOT in god mode
+		if (!godMode && sprite->animation() != MOVE_RIGHT) sprite->changeAnimation(MOVE_RIGHT);
+
 		posPlayer.x += 2;
 		if (map->collisionMoveRight(posPlayer, glm::ivec2(24, 32))) {
 			posPlayer.x -= 2;
-			if (!bJumping && sprite->animation() != STAND_RIGHT) sprite->changeAnimation(STAND_RIGHT);
+			if (!godMode && !bFloating && sprite->animation() != STAND_RIGHT) sprite->changeAnimation(STAND_RIGHT);
 		}
 	}
 	return moving;
 }
 
-void Player::updateJumpLogic(bool moving)
+void Player::updateFloatingLogic()
 {
-	jumpAngle += JUMP_ANGLE_STEP;
-	posPlayer.y = startY - (int)(JUMP_HEIGHT * sin(3.14159f * jumpAngle / 180.f));
-
-	if (jumpAngle > 90) {
-		if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y))
-			stopJumping();
+	// Exit if moving sideways
+	if ((Game::instance().getKey(GLFW_KEY_LEFT) || Game::instance().getKey(GLFW_KEY_RIGHT)) && !Game::instance().getKey(GLFW_KEY_UP)) {
+		bFloating = false;
+		return;
 	}
-	if (jumpAngle >= 180) stopJumping();
 
-	if (bJumping) {
-		int targetAnim = (jumpAngle < 90) ? ASCEND : DESCEND;
-		if (sprite->animation() != targetAnim) sprite->changeAnimation(targetAnim);
-	}
-	else {
-		if (moving) {
-			int moveAnim = Game::instance().getKey(GLFW_KEY_LEFT) ? MOVE_LEFT : MOVE_RIGHT;
-			if (sprite->animation() != moveAnim) sprite->changeAnimation(moveAnim);
-		}
-		else {
-			int standAnim = (sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT)
-				? STAND_LEFT : STAND_RIGHT;
-			if (sprite->animation() != standAnim) sprite->changeAnimation(standAnim);
-		}
+	posPlayer.y -= 4; // Constant upward speed
+	if (sprite->animation() != ASCEND) sprite->changeAnimation(ASCEND);
+
+	int headY;
+	if (map->collisionMoveUp(posPlayer, glm::ivec2(24, 32), &headY)) {
+		posPlayer.y = headY;
+		bFloating = false;
 	}
 }
 
@@ -436,14 +449,8 @@ void Player::updateGravityLogic(bool moving)
 
 	if (map->collisionMoveDown(posPlayer, glm::ivec2(24, 32), &posPlayer.y)) {
 		if (!moving) {
-			int standAnim = (sprite->animation() == MOVE_LEFT || sprite->animation() == STAND_LEFT)
-				? STAND_LEFT : STAND_RIGHT;
+			int standAnim = facingLeft ? STAND_LEFT : STAND_RIGHT;
 			if (sprite->animation() != standAnim) sprite->changeAnimation(standAnim);
-		}
-		if (Game::instance().getKey(GLFW_KEY_UP)) {
-			bJumping = true;
-			jumpAngle = 0;
-			startY = posPlayer.y;
 		}
 	}
 	else {
@@ -472,10 +479,50 @@ void Player::setPosition(const glm::vec2& pos)
 	sprite->setPosition(glm::vec2(tileMapDispl + posPlayer));
 }
 
-glm::ivec2 Player::getPosition() const { return posPlayer; }
-
 void Player::stopJumping()
 {
-	bJumping = false;
+	bFloating = false;
 	jumpAngle = 0;
+}
+
+void Player::playerEvent(LevelScene* levelScene, int deltaTime)
+{
+	if (actionTimer > 0)
+	{
+		actionTimer -= deltaTime;
+	}
+	else
+	{
+		if (Game::instance().getKey(GLFW_KEY_S))
+		{
+			if (bullets > 0)
+			{
+				--bullets;
+				Bullet* bullet = new Bullet();
+				// Spawn slightly in front of Spongebob
+				glm::vec2 spawnPos = glm::vec2(posPlayer.x + tileMapDispl.x + (!facingLeft ? 24 : 0),
+					posPlayer.y + tileMapDispl.y + 12);
+
+				bullet->init(spawnPos, *program, !facingLeft, "assets/images/bubble-pixel-art.png");
+
+				// Adding it to the vector makes it "exist" for the update and render loops
+				levelScene->addBullet(bullet);
+			}
+			actionTimer = 2000;
+		}
+		if (Game::instance().getKey(GLFW_KEY_B))
+		{
+			if (bombs > 0)
+			{
+				--bombs;
+				Bomb* bomb = new Bomb();
+				glm::vec2 spawnPos = glm::vec2(posPlayer.x + 32, posPlayer.y + 16);
+				bomb->init(spawnPos, *program);
+
+				// Adding it to the vector makes it "exist" for the update and render loops
+				levelScene->addBomb(bomb);
+			}
+			actionTimer = 2000;
+		}
+	}
 }

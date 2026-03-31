@@ -29,9 +29,9 @@ void Game::init()
 	SFX::instance().playMusic("assets/audio/main_menu.mp3", true, 50.f);
 	bPlay = true;
 	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-	
+
 	state = MAIN_MENU;
-	
+
 	menuScene = new MenuScene();
 	menuScene->init();
 
@@ -40,8 +40,13 @@ void Game::init()
 
 	currentScene = menuScene;
 
-	level1Scene = new LevelScene();
-	level1Scene->init("assets/levels/level01.txt");
+	player = new Player();
+
+	level1Scene = new LevelScene("assets/levels/level01.txt",player);
+	level2Scene = new LevelScene("assets/levels/level02.txt",player);
+	level3Scene = new LevelScene("assets/levels/level03.txt",player);
+	level4Scene = new LevelScene();
+	level5Scene = new LevelScene();
 }
 
 bool Game::update(int deltaTime)
@@ -63,12 +68,24 @@ void Game::keyPressed(int key)
 	if(key == GLFW_KEY_ESCAPE) // Escape code
 		bPlay = false;
 	if (state == MAIN_MENU) {
-		if (key == GLFW_KEY_1) state = PLAYING;
-		if (key == GLFW_KEY_2) state = INSTRUCTIONS;
-		if (key == GLFW_KEY_3) state = CREDITS;
+		if (key == GLFW_KEY_I) changeState(INSTRUCTIONS);
+		if (key == GLFW_KEY_C) changeState(CREDITS);
 	}
 	else if (key == GLFW_KEY_M) { // Press M to return to menu
-		state = MAIN_MENU;
+		changeState(MAIN_MENU);
+	}
+	if (key == GLFW_KEY_1) { changeState(PLAYING); }
+	if (key == GLFW_KEY_2) { changeState(PLAYING); getNextLevel(level1Scene); }
+	if (key == GLFW_KEY_3) {
+		changeState(PLAYING); getNextLevel(level2Scene);
+	}
+	if (key == GLFW_KEY_K)
+	{
+		LevelScene* currScene = dynamic_cast<LevelScene*>(currentScene);
+		if (currScene != nullptr)
+		{
+			currScene->collectKeys();
+		}
 	}
 
 	if (key == GLFW_KEY_ESCAPE) bPlay = false;
@@ -128,6 +145,19 @@ void Game::changeState(GameState newState)
 		currentScene = creditsScene;
 		break;
 	}
+	currentScene->init();
+}
+
+void Game::getNextLevel(LevelScene* lvScn)
+{
+	// Compare the active currentScene pointer to your level instances
+	if (lvScn == level1Scene) currentScene = level2Scene;
+	else if (lvScn == level2Scene) currentScene = level3Scene;
+	else if (lvScn == level3Scene) currentScene = level4Scene;
+	else if (lvScn == level4Scene) currentScene = level5Scene;
+	else if (lvScn == level5Scene) { changeState(CREDITS); return;  }
+
+	currentScene->init();
 }
 
 

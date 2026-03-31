@@ -3,6 +3,10 @@
 
 #include "Sprite.h"
 #include "TileMap.h"
+#include "Bullet.h"
+#include "Bomb.h"
+
+class LevelScene;
 
 class Player
 {
@@ -23,27 +27,34 @@ public:
 	int getLives() { return lives; }
 	void updateHeartPositions();
 	void receiveDamage(int amount);
-	glm::ivec2 getPosition() const;
+	glm::ivec2 getPosition() const {return posPlayer;};
 
 	bool isGodMode() const { return godMode; }
 	Sprite* getSprite() const { return sprite; }
 	void stopJumping();
-	void startDoorEnterAnimation();
 	void startHurtAnimation(bool enemyToRight);
 	void updateHurtLogic(int deltaTime);
 	bool isHurting()    const { return bHurting; }
 	bool isInvincible() const { return invincibilityTimer > 0.f; }
 	static const float HURT_DURATION;         // 625ms = 5 frames @ 8fps
 	static const float INVINCIBILITY_DURATION;
+	void startDoorEnterAnimation();
+	void addBullet() { ++bullets; };
+	void addBomb() { ++bombs; };
+
+	void playerEvent(LevelScene* levelScene, int deltaTime);
 private:
 	void handleClimbing();
 	bool handleHorizontalMovement();
-	void updateJumpLogic(bool moving);
+	void updateFloatingLogic();
 	void updateGravityLogic(bool moving);
 	void updateGodModeLogic(int deltaTime);
 
 private:
-	bool bJumping;
+
+	ShaderProgram* program;
+	bool bFloating = false;
+	bool bJumping = false;
 	glm::ivec2 tileMapDispl, posPlayer;
 	int jumpAngle, startY;
 	Texture spritesheet;
@@ -60,6 +71,9 @@ private:
 	int lives;
 	Texture heartTexture;
 	Sprite* heartSprites[3];
+
+	int bullets, bombs;
+	int actionTimer;
 
 	bool godMode = false;
 	bool godModeActivating = false;

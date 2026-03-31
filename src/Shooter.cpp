@@ -50,7 +50,7 @@ void Shooter::update(int deltaTime) {
         }
         // Ledge check: Check tile under where the right edge will be
         // mapY + 32 is the row directly beneath the 32x32 sprite
-        else if (map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 1) {
+        else if (map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 1 && map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 6) {
             shouldTurn = true;
         }
     }
@@ -60,7 +60,7 @@ void Shooter::update(int deltaTime) {
             shouldTurn = true;
         }
         // Ledge check: Check tile under where the left edge is
-        else if (map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 1) {
+        else if (map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 1 && map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 6) {
             shouldTurn = true;
         }
     }
@@ -100,7 +100,7 @@ void Shooter::Shoot(int deltaTime, ShaderProgram& program) {
         glm::vec2 spawnPos = glm::vec2(position.x + tileMapDispl.x + (moveRight ? 24 : 0),
             position.y + tileMapDispl.y + 12);
 
-        bullet->init(spawnPos, program, moveRight);
+        bullet->init(spawnPos, program, moveRight, "assets/images/money.png");
 
         // Adding it to the vector makes it "exist" for the update and render loops
         bullets.push_back(bullet);

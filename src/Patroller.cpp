@@ -45,7 +45,7 @@ void Patroller::update(int deltaTime) {
         }
         // Ledge check: Check tile under where the right edge will be
         // mapY + 32 is the row directly beneath the 32x32 sprite
-        else if (map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 1) {
+        else if (map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 1 && map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 6) {
             shouldTurn = true;
         }
     }
@@ -55,7 +55,7 @@ void Patroller::update(int deltaTime) {
             shouldTurn = true;
         }
         // Ledge check: Check tile under where the left edge is
-        else if (map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 1) {
+        else if (map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 1 && map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 6) {
             shouldTurn = true;
         }
     }
