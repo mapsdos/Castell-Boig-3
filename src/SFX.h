@@ -54,7 +54,7 @@ private:
     float soundVolume = 100.f;
 
     // Volumen global
-    float masterVolume = 0.f;
+    float masterVolume = 35.f;
 
     // Limpiar sonidos que ya terminaron
     void cleanStoppedSounds();

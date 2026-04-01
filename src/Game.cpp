@@ -75,6 +75,7 @@ void Game::keyPressed(int key)
 	}
 	else if (key == GLFW_KEY_M) { // Press M to return to menu
 		changeState(MAIN_MENU);
+		SFX::instance().playMusic("assets/audio/main_menu.mp3", true, 50.f);
 	}
 	if (key == GLFW_KEY_1) { setStateToPlaying(); currentScene = level1Scene; currentScene->init(); }
 	if (key == GLFW_KEY_2) { setStateToPlaying(); getNextLevel(level1Scene); }
@@ -96,7 +97,6 @@ void Game::keyPressed(int key)
 		}
 	}
 
-	if (key == GLFW_KEY_ESCAPE) bPlay = false;
 	keys[key] = true;
 }
 

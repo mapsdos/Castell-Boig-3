@@ -139,8 +139,9 @@ void LevelScene::init()
 			case 5:
 			{
 				Key* newKey = new Key();
-
-				newKey->init(glm::vec2(x, y), texProgram);
+				// Keys are 20x13, position them lower (+12 pixels)
+				float keyY = y + 12.f;
+				newKey->init(glm::vec2(x, keyY), texProgram);
 				keys.push_back(newKey);
 				break;
 			}
@@ -266,6 +267,11 @@ void LevelScene::init()
 	player->setTileMap(map);
 	projection = glm::ortho(0.f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.f);
 	currentTime = 0.0f;
+
+	// Play level music and load hurt sound
+	SFX::instance().playMusic("assets/audio/playing.mp3", true, 40.f);
+	SFX::instance().loadSound("hurt", "assets/audio/hurt.mp3");
+	SFX::instance().loadSound("you_died", "assets/audio/you_died.mp3");
 
 	// Fade overlay: necesitas assets/images/white.png (1×1 píxel blanco)
 	fadeTexture.loadFromFile("assets/images/white.png", TEXTURE_PIXEL_FORMAT_RGBA);
@@ -535,10 +541,11 @@ void LevelScene::update(int deltaTime)
 	// Keys in the scene
 
 	for (auto it = keys.begin(); it != keys.end(); ) {
+		// Key hitbox matches visual size (20x13)
 		float iL = (*it)->getPosition().x;
-		float iR = iL + 32;
+		float iR = iL + 20;
 		float iT = (*it)->getPosition().y;
-		float iB = iT + 32;
+		float iB = iT + 13;
 
 		if (pL < iR && pR > iL && pT < iB && pB > iT) {
 			delete* it;
@@ -769,6 +776,7 @@ void LevelScene::update(int deltaTime)
 				bool enemyToRight = (eWorldX + 16.f) > (playerWorldX + 12.f);
 				player->receiveDamage(1);
 				player->startHurtAnimation(enemyToRight);
+				SFX::instance().playSound("hurt", 80.f);
 				playerHurting = true;
 				return;
 			}
@@ -795,6 +803,7 @@ void LevelScene::update(int deltaTime)
 					bool bulletFromLeft = b->isMovingRight();
 					player->receiveDamage(1);
 					player->startHurtAnimation(!bulletFromLeft);
+					SFX::instance().playSound("hurt", 80.f);
 					playerHurting = true;
 					return;
 				}

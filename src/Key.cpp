@@ -5,8 +5,10 @@ void Key::init(const glm::vec2& pos, ShaderProgram& program) {
     position = pos;
     spritesheet.loadFromFile("assets/images/pixel-key.png", TEXTURE_PIXEL_FORMAT_RGBA);
 
-    // 1.0f, 1.0f uses the whole image as one frame
-    sprite = Sprite::createSprite(glm::vec2(32, 32), glm::vec2(1.0f, 1.0f), &spritesheet, &program);
+    // Key image is 802x512, aspect ratio ~1.57:1
+    // Render at 20x13 to maintain proportions and fit the game scale
+    // Hitbox will match visual size
+    sprite = Sprite::createSprite(glm::vec2(20, 13), glm::vec2(1.0f, 1.0f), &spritesheet, &program);
     sprite->setPosition(position);
 
     // Define the animation state
