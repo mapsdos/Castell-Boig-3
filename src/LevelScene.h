@@ -63,6 +63,18 @@ private:
 	float  enterAnimTimer = 0.f;
 	const float ENTER_ANIM_DURATION = 375.f; // 3 frames × (1000/8) ms
 	Door* pendingDoor = nullptr;
+	
+	// ── Stair animation state ─────────────────────────────────────────────
+	bool   enteringStairs = false;
+	float  stairAnimTimer = 0.f;
+	Stairs* pendingStairs = nullptr;
+	
+	// ── Camera transition ─────────────────────────────────────────────────
+	bool   cameraTransitioning = false;
+	glm::vec2 cameraStart;
+	glm::vec2 cameraTarget;
+	float  cameraTransitionTimer = 0.f;
+	const float CAMERA_TRANSITION_DURATION = 350.f; // Fast smooth transition
 	// ── Hit / Death state ──────────────────────────────────────────────────
 	bool  playerHurting = false;
 	bool  hurtPaused = false;      // pausa en el último frame de la animación hurt

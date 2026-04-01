@@ -24,7 +24,7 @@ private:
 	void handleMove(PathStep& step, glm::vec2 dir, float len, int dt);
 	void handleClimb(PathStep& step, glm::vec2 dir, float len, int dt);
 	void handleFall(PathStep& step, int dt);
-	void handleTransport(PathStep& step);
+	void handleTransport(PathStep& step, int dt);
 	void updateAnimation();
 	void handleAscend(PathStep& step, int dt);
 	void handleLeap(PathStep& step, int dt);
@@ -33,6 +33,12 @@ private:
 	bool isClimbing = false;
 	bool lastMoveRight = true;
 	std::vector<PathStep> pathSequence;
+	
+	// Stair animation state
+	bool doingStairAnim = false;
+	float stairAnimTimer = 0.f;
+	PathStep* pendingTransport = nullptr;
+	static const float STAIR_ANIM_DURATION;
 };
 
 #endif
