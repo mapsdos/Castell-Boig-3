@@ -5,18 +5,83 @@
 Entity* Shooter::clone(ShaderProgram&) const { return nullptr; }
 
 void Shooter::init(const glm::vec2& pos, ShaderProgram& program) {
-    Enemy::init(pos, program); // Call base init to set position
+    Enemy::init(pos, program);
+    position = pos;
     movementTimer = 1000;
     isIdle = false;
+    isShooting = false;
+    shootAnimTimer = 0;
 
-    // Load your specific enemy image
-    spritesheet.loadFromFile("assets/images/Mr_Krabs.png", TEXTURE_PIXEL_FORMAT_RGBA);
-    sprite = Sprite::createSprite(glm::vec2(32, 32), glm::vec2(1.0f, 1.0f), &spritesheet, &program);
+    // Squidward spritesheet: 10 frames of 14x31 pixels
+    float frameWidth = 14.0f;
+    float frameHeight = 31.0f;
+    int numFrames = 10;
+    float frameWidthUV = 1.0f / numFrames;
+    float frameHeightUV = 1.0f;
 
-    sprite->setNumberAnimations(1);
-    sprite->setAnimationSpeed(0, 1);       // Prevent infinite loop crash
-    sprite->addKeyframe(0, glm::vec2(0.f, 0.f)); // Start at top-left of image
-    sprite->changeAnimation(0);            // Activate animation
+    // Display size (scaled ~1.3x - slightly larger than player 24x32)
+    spriteWidth = 18;
+    spriteHeight = 40;
+
+    spritesheet.loadFromFile("assets/images/enemies/squidward/squidward.png", TEXTURE_PIXEL_FORMAT_RGBA);
+    sprite = Sprite::createSprite(
+        glm::ivec2(spriteWidth, spriteHeight),
+        glm::vec2(frameWidthUV, frameHeightUV),
+        &spritesheet,
+        &program
+    );
+
+    sprite->setNumberAnimations(6);
+
+    // SQUIDWARD_STAND_RIGHT (frame 0)
+    sprite->setAnimationSpeed(SQUIDWARD_STAND_RIGHT, 8);
+    sprite->addKeyframe(SQUIDWARD_STAND_RIGHT, glm::vec2(0.0f * frameWidthUV, 0.0f));
+
+    // SQUIDWARD_STAND_LEFT (frame 1)
+    sprite->setAnimationSpeed(SQUIDWARD_STAND_LEFT, 8);
+    sprite->addKeyframe(SQUIDWARD_STAND_LEFT, glm::vec2(1.0f * frameWidthUV, 0.0f));
+
+    // SQUIDWARD_WALK_RIGHT (frames 2,3,4)
+    sprite->setAnimationSpeed(SQUIDWARD_WALK_RIGHT, 8);
+    sprite->addKeyframe(SQUIDWARD_WALK_RIGHT, glm::vec2(2.0f * frameWidthUV, 0.0f));
+    sprite->addKeyframe(SQUIDWARD_WALK_RIGHT, glm::vec2(3.0f * frameWidthUV, 0.0f));
+    sprite->addKeyframe(SQUIDWARD_WALK_RIGHT, glm::vec2(4.0f * frameWidthUV, 0.0f));
+
+    // SQUIDWARD_WALK_LEFT (frames 5,6,7)
+    sprite->setAnimationSpeed(SQUIDWARD_WALK_LEFT, 8);
+    sprite->addKeyframe(SQUIDWARD_WALK_LEFT, glm::vec2(5.0f * frameWidthUV, 0.0f));
+    sprite->addKeyframe(SQUIDWARD_WALK_LEFT, glm::vec2(6.0f * frameWidthUV, 0.0f));
+    sprite->addKeyframe(SQUIDWARD_WALK_LEFT, glm::vec2(7.0f * frameWidthUV, 0.0f));
+
+    // SQUIDWARD_SHOOT_RIGHT (frame 8)
+    sprite->setAnimationSpeed(SQUIDWARD_SHOOT_RIGHT, 8);
+    sprite->addKeyframe(SQUIDWARD_SHOOT_RIGHT, glm::vec2(8.0f * frameWidthUV, 0.0f));
+
+    // SQUIDWARD_SHOOT_LEFT (frame 9)
+    sprite->setAnimationSpeed(SQUIDWARD_SHOOT_LEFT, 8);
+    sprite->addKeyframe(SQUIDWARD_SHOOT_LEFT, glm::vec2(9.0f * frameWidthUV, 0.0f));
+
+    sprite->changeAnimation(SQUIDWARD_STAND_RIGHT);
+}
+
+void Shooter::updateAnimation() {
+    if (isShooting) {
+        int targetAnim = moveRight ? SQUIDWARD_SHOOT_RIGHT : SQUIDWARD_SHOOT_LEFT;
+        if (sprite->animation() != targetAnim) {
+            sprite->changeAnimation(targetAnim);
+        }
+        return;
+    }
+    
+    int targetAnim;
+    if (isIdle) {
+        targetAnim = moveRight ? SQUIDWARD_STAND_RIGHT : SQUIDWARD_STAND_LEFT;
+    } else {
+        targetAnim = moveRight ? SQUIDWARD_WALK_RIGHT : SQUIDWARD_WALK_LEFT;
+    }
+    if (sprite->animation() != targetAnim) {
+        sprite->changeAnimation(targetAnim);
+    }
 }
 
 void Shooter::update(int deltaTime) {
@@ -24,67 +89,78 @@ void Shooter::update(int deltaTime) {
     int mapY = (int)position.y;
     bool shouldTurn = false;
 
+    // Handle shooting animation timer
+    if (isShooting) {
+        shootAnimTimer -= deltaTime;
+        if (shootAnimTimer <= 0) {
+            isShooting = false;
+        }
+    }
+
     // --- 1. IDLE LOGIC ---
     movementTimer -= deltaTime;
     if (movementTimer <= 0) {
-        isIdle = !isIdle; // Toggle between walking and stopping
-        // Random time: 1-3 seconds
+        isIdle = !isIdle;
         movementTimer = 1000 + (rand() % 2000);
     }
 
-    for (Bullet* b : bullets)
-    {
+    for (Bullet* b : bullets) {
         b->update(deltaTime);
     }
 
-    if (isIdle) {
+    if (isIdle || isShooting) {
+        updateAnimation();
         sprite->update(deltaTime);
-        return; // Skip movement logic while idle
+        return;
     }
 
     // --- 2. COLLISION & LEDGE DETECTION ---
+    int groundCheckY = mapY + spriteHeight;
+    
     if (moveRight) {
-        // Wall check (Torso level)
-        if (map->getTileIdAt(glm::ivec2(mapX + 32, mapY + 16)) == 1) {
+        int rightEdge = mapX + spriteWidth;
+        // Wall check at mid-height
+        if (map->getTileIdAt(glm::ivec2(rightEdge, mapY + spriteHeight / 2)) == 1) {
             shouldTurn = true;
         }
-        // Ledge check: Check tile under where the right edge will be
-        // mapY + 32 is the row directly beneath the 32x32 sprite
-        else if (map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 1 && map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 6) {
-            shouldTurn = true;
+        // Ledge check
+        else {
+            int tileBelow = map->getTileIdAt(glm::ivec2(rightEdge - 1, groundCheckY));
+            if (tileBelow != 1 && tileBelow != 6) {
+                shouldTurn = true;
+            }
         }
     }
     else {
-        // Wall check (Torso level)
-        if (map->getTileIdAt(glm::ivec2(mapX - 1, mapY + 16)) == 1) {
+        // Wall check at mid-height
+        if (map->getTileIdAt(glm::ivec2(mapX - 1, mapY + spriteHeight / 2)) == 1) {
             shouldTurn = true;
         }
-        // Ledge check: Check tile under where the left edge is
-        else if (map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 1 && map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 6) {
-            shouldTurn = true;
+        // Ledge check
+        else {
+            int tileBelow = map->getTileIdAt(glm::ivec2(mapX, groundCheckY));
+            if (tileBelow != 1 && tileBelow != 6) {
+                shouldTurn = true;
+            }
         }
     }
 
     // --- 3. MOVEMENT EXECUTION ---
     if (shouldTurn) {
         moveRight = !moveRight;
-        position.x += moveRight ? 1.0f : -1.0f;
     }
     else {
-        float speed = 0.1f * deltaTime;
+        float speed = 0.04f * deltaTime;
         position.x += moveRight ? speed : -speed;
     }
 
     this->setPosition(position);
+    updateAnimation();
     sprite->update(deltaTime);
 }
 
 void Shooter::render(const glm::mat4& modelview) {
-    // 1. Draw Mr. Krabs himself
     Enemy::render(modelview);
-
-    // 2. Draw all bullets that currently exist
-    // If the vector is empty, this loop is skipped automatically!
     for (Bullet* b : bullets) {
         b->render(modelview);
     }
@@ -95,14 +171,18 @@ void Shooter::Shoot(int deltaTime, ShaderProgram& program) {
     if (shotTimer <= 0) {
         shotTimer = 1500 + (rand() % 2000);
 
+        // Start shooting animation
+        isShooting = true;
+        shootAnimTimer = 300;
+
         Bullet* bullet = new Bullet();
-        // Spawn slightly in front of Mr. Krabs
-        glm::vec2 spawnPos = glm::vec2(position.x + tileMapDispl.x + (moveRight ? 24 : 0),
-            position.y + tileMapDispl.y + 12);
+        // Spawn in front of Squidward (28x62 sprite)
+        glm::vec2 spawnPos = glm::vec2(
+            position.x + tileMapDispl.x + (moveRight ? spriteWidth : -16),
+            position.y + tileMapDispl.y + spriteHeight / 3
+        );
 
-        bullet->init(spawnPos, program, moveRight, "assets/images/money.png");
-
-        // Adding it to the vector makes it "exist" for the update and render loops
+        bullet->init(spawnPos, program, moveRight, "assets/images/enemies/squidward/clarinet.png");
         bullets.push_back(bullet);
     }
 }
@@ -113,6 +193,14 @@ void Shooter::update(int deltaTime, const std::vector<Weight*> weights)
     int mapY = (int)position.y;
     bool shouldTurn = false;
 
+    // Handle shooting animation timer
+    if (isShooting) {
+        shootAnimTimer -= deltaTime;
+        if (shootAnimTimer <= 0) {
+            isShooting = false;
+        }
+    }
+
     // --- 1. IDLE & BULLETS ---
     movementTimer -= deltaTime;
     if (movementTimer <= 0) {
@@ -120,17 +208,20 @@ void Shooter::update(int deltaTime, const std::vector<Weight*> weights)
         movementTimer = 1000 + (rand() % 2000);
     }
     for (Bullet* b : bullets) { b->update(deltaTime); }
-    if (isIdle) { sprite->update(deltaTime); return; }
+    if (isIdle || isShooting) { 
+        updateAnimation();
+        sprite->update(deltaTime); 
+        return; 
+    }
 
     // --- 2. MOVEMENT CALCULATIONS ---
-    float speed = 0.1f * deltaTime;
+    float speed = 0.04f * deltaTime;
 
-    // --- 3. WEIGHT COLLISION (Mirrored from Player Logic) ---
-    // We use the same SCREEN offsets and hitbox widths you provided
-    float pL = position.x + 32; // Using 32 based on your previous code's offset
-    float pR = pL + 24;         // Shooter width (matching player)
-    float pT = position.y + 16; // Adjusting for your engine's Y offset
-    float pB = pT + 32;         // Shooter height
+    // Hitbox for Squidward (28x62)
+    float pL = position.x;
+    float pR = pL + spriteWidth;
+    float pT = position.y;
+    float pB = pT + spriteHeight;
 
     for (Weight* w : weights) {
         float wL = w->getPosition().x;
@@ -138,17 +229,14 @@ void Shooter::update(int deltaTime, const std::vector<Weight*> weights)
         float wT = w->getPosition().y;
         float wB = wT + 16;
 
-        // Vertical overlap check
         if (pB > wT && pT < wB) {
             if (moveRight) {
-                // If Shooter's right side hits weight's left side
                 if ((pR + speed) > wL && pL < wL) {
                     shouldTurn = true;
                     break;
                 }
             }
             else {
-                // If Shooter's left side hits weight's right side
                 if ((pL - speed) < wR && pR > wR) {
                     shouldTurn = true;
                     break;
@@ -157,30 +245,44 @@ void Shooter::update(int deltaTime, const std::vector<Weight*> weights)
         }
     }
 
-    // --- 4. TILE/LEDGE DETECTION ---
+    // --- 3. TILE/LEDGE DETECTION ---
     if (!shouldTurn) {
+        int groundCheckY = mapY + spriteHeight;
+        
         if (moveRight) {
-            if (map->getTileIdAt(glm::ivec2(mapX + 32, mapY + 16)) == 1) shouldTurn = true;
-            else if (map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 1 &&
-                map->getTileIdAt(glm::ivec2(mapX + 31, mapY + 32)) != 6) shouldTurn = true;
+            int rightEdge = mapX + spriteWidth;
+            if (map->getTileIdAt(glm::ivec2(rightEdge, mapY + spriteHeight / 2)) == 1) {
+                shouldTurn = true;
+            }
+            else {
+                int tileBelow = map->getTileIdAt(glm::ivec2(rightEdge - 1, groundCheckY));
+                if (tileBelow != 1 && tileBelow != 6) {
+                    shouldTurn = true;
+                }
+            }
         }
         else {
-            if (map->getTileIdAt(glm::ivec2(mapX - 1, mapY + 16)) == 1) shouldTurn = true;
-            else if (map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 1 &&
-                map->getTileIdAt(glm::ivec2(mapX, mapY + 32)) != 6) shouldTurn = true;
+            if (map->getTileIdAt(glm::ivec2(mapX - 1, mapY + spriteHeight / 2)) == 1) {
+                shouldTurn = true;
+            }
+            else {
+                int tileBelow = map->getTileIdAt(glm::ivec2(mapX, groundCheckY));
+                if (tileBelow != 1 && tileBelow != 6) {
+                    shouldTurn = true;
+                }
+            }
         }
     }
 
-    // --- 5. EXECUTION ---
+    // --- 4. EXECUTION ---
     if (shouldTurn) {
         moveRight = !moveRight;
-        // Small nudge to prevent immediate re-collision
-        position.x += moveRight ? 1.0f : -1.0f;
     }
     else {
         position.x += moveRight ? speed : -speed;
     }
 
     this->setPosition(position);
+    updateAnimation();
     sprite->update(deltaTime);
 }
