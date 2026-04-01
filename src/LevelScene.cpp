@@ -10,6 +10,7 @@
 #include "Patroller.h"
 #include "Shooter.h"
 #include "Follower.h"
+#include "Explosion.h"
 
 #define SCREEN_X 32
 #define SCREEN_Y 16
@@ -84,6 +85,10 @@ void LevelScene::init()
 	youDied = false;
 	youDiedTimer = 0.f;
 	youDiedFading = false;
+
+	explosionTexture.loadFromFile("assets/images/explosion1.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	explosionTexture.setMinFilter(GL_NEAREST);
+	explosionTexture.setMagFilter(GL_NEAREST);
 
 	keyHudTex.loadFromFile("assets/images/pixel-key.png", TEXTURE_PIXEL_FORMAT_RGBA);
 	bubbleHudTex.loadFromFile("assets/images/bubble-blower-stick-pixel-art.png", TEXTURE_PIXEL_FORMAT_RGBA);
@@ -280,6 +285,20 @@ void LevelScene::update(int deltaTime)
 		deltaTime = 0;
 	}
 	currentTime += deltaTime;
+
+	for (auto it = activeEffects.begin(); it != activeEffects.end(); ) {
+		(*it)->update(deltaTime);
+
+		// Cast to Explosion to check if finished
+		Explosion* exp = dynamic_cast<Explosion*>(*it);
+		if (exp && exp->isFinished()) {
+			delete* it;
+			it = activeEffects.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
 
 	// ── YOU DIED FADE: fade out después de mostrar "you died" ──────────
 	if (youDiedFading)
@@ -551,6 +570,9 @@ void LevelScene::update(int deltaTime)
 		(*w)->update(deltaTime);
 		if ((*w)->getFell())
 		{
+			Explosion* exp = new Explosion();
+			exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 16), &explosionTexture, texProgram);
+			activeEffects.push_back(exp);
 			delete* w;
 			w = weights.erase(w);
 		}
@@ -577,6 +599,9 @@ void LevelScene::update(int deltaTime)
 			// Assuming Bullet is 8x8 pixels
 			if (bPos.x < eR && bPos.x + 8 > eL && bPos.y < eB && bPos.y + 8 > eT) {
 				enemyKilled = true;
+				Explosion* exp = new Explosion();
+				exp->init(glm::vec2((*bIt)->getPosition().x, (*bIt)->getPosition().y - 16), &explosionTexture, texProgram);
+				activeEffects.push_back(exp);
 				delete* bIt;
 				bIt = bulletsFired.erase(bIt);
 				break; // Stop checking other bullets for this enemy
@@ -591,6 +616,9 @@ void LevelScene::update(int deltaTime)
 				// Assuming Bomb is 16x16 pixels
 				if (bmPos.x < eR && bmPos.x + 16 > eL && bmPos.y < eB && bmPos.y + 16 > eT) {
 					enemyKilled = true;
+					Explosion* exp = new Explosion();
+					exp->init(glm::vec2((*bmIt)->getPosition().x, (*bmIt)->getPosition().y - 16), &explosionTexture, texProgram);
+					activeEffects.push_back(exp);
 					delete* bmIt;
 					bmIt = bombsPlaced.erase(bmIt);
 					break;
@@ -609,6 +637,9 @@ void LevelScene::update(int deltaTime)
 
 				if (wL < eR && wR > eL && wT < eB && wB > eT) {
 					enemyKilled = true;
+					Explosion* exp = new Explosion();
+					exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 16), &explosionTexture, texProgram);
+					activeEffects.push_back(exp);
 					delete (*w);
 					w = weights.erase(w);
 					break;
@@ -782,6 +813,10 @@ void LevelScene::render()
 
 	player->render(modelview);
 
+	for (auto effect : activeEffects) {
+		effect->render(modelview);
+	}
+
 	// --- 3. HUD (SCREEN SPACE - DRAWN LAST TO BE ON TOP) ---
 	glm::mat4 identity = glm::mat4(1.0f);
 	glm::mat4 hudProj = glm::ortho(0.f, 640.f, 480.f, 0.f);
@@ -897,6 +932,9 @@ void LevelScene::clearLevel() {
 
 	for (Door* d : doors) { if (d) delete d; }
 	doors.clear();
+
+	for (Entity* a : activeEffects) { if (a) delete a; }
+	activeEffects.clear();
 
 	// 2. HANDLE SINGLETON POINTERS (Except Player)
 	// We don't delete 'player' here because it's managed by Game/init logic
