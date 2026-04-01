@@ -56,7 +56,7 @@ void CreditsScene::init()
 	// Cargar todas las imágenes de créditos
 	loadCreditsImages();
 
-	//SFX::instance().playMusic("assets/audio/credits.mp3", true, 50.f);
+	SFX::instance().playMusic("assets/audio/credits.mp3", true, 50.f);
 	isActive = true;
 }
 
@@ -143,8 +143,8 @@ void CreditsScene::update(int deltaTime)
 			<< " de " << creditSprites.size() << std::endl;
 	}
 
-	// Volver al menú con ESC o M
-	if (Game::instance().getKey(GLFW_KEY_ESCAPE) || Game::instance().getKey(GLFW_KEY_M)) {
+	// Volver al menú con M (ESC is handled globally in Game.cpp)
+	if (Game::instance().getKey(GLFW_KEY_M)) {
 		Game::instance().changeState(MAIN_MENU);
 	}
 
