@@ -441,6 +441,57 @@ void LevelScene::update(int deltaTime)
 		return; // everything else is frozen
 	}
 
+	// ── Stair-entry animation freeze ──────────────────────────────────────
+	if (enteringStairs)
+	{
+		player->getSprite()->update(deltaTime);
+		stairAnimTimer += deltaTime;
+
+		if (stairAnimTimer >= ENTER_ANIM_DURATION && pendingStairs != nullptr)
+		{
+			// Animation finished → teleport player and start camera transition
+			glm::vec2 dest = pendingStairs->getDestination();
+			
+			// Calculate camera position before teleport
+			float zoomWidth = 320.0f;
+			float zoomHeight = 240.0f;
+			float playerWorldX = player->getPosition().x + SCREEN_X + 12.0f;
+			float playerWorldY = player->getPosition().y + SCREEN_Y + 16.0f;
+			cameraStart.x = playerWorldX - (zoomWidth / 2.0f);
+			cameraStart.y = playerWorldY - (zoomHeight / 2.0f);
+			
+			// Teleport player
+			player->setPosition(dest - glm::vec2(SCREEN_X, SCREEN_Y + 1));
+			
+			// Calculate camera target position (after teleport)
+			playerWorldX = player->getPosition().x + SCREEN_X + 12.0f;
+			playerWorldY = player->getPosition().y + SCREEN_Y + 16.0f;
+			cameraTarget.x = playerWorldX - (zoomWidth / 2.0f);
+			cameraTarget.y = playerWorldY - (zoomHeight / 2.0f);
+			
+			// Start camera transition
+			cameraTransitioning = true;
+			cameraTransitionTimer = 0.f;
+			
+			stairCooldown = STAIR_DELAY;
+			enteringStairs = false;
+			stairAnimTimer = 0.f;
+			pendingStairs = nullptr;
+		}
+		return; // everything else is frozen
+	}
+
+	// ── Camera transition update ──────────────────────────────────────────
+	if (cameraTransitioning)
+	{
+		cameraTransitionTimer += deltaTime;
+		if (cameraTransitionTimer >= CAMERA_TRANSITION_DURATION)
+		{
+			cameraTransitioning = false;
+			cameraTransitionTimer = 0.f;
+		}
+	}
+
 	if (stairCooldown > 0)
 		stairCooldown -= deltaTime;
 
@@ -489,9 +540,11 @@ void LevelScene::update(int deltaTime)
 		{
 			if (Game::instance().getKey(GLFW_KEY_UP) && stairCooldown <= 0)
 			{
-				glm::vec2 dest = s->getDestination();
-				player->setPosition(dest - glm::vec2(SCREEN_X, SCREEN_Y + 1));
-				stairCooldown = STAIR_DELAY;
+				// Start stair enter animation
+				pendingStairs = s;
+				enteringStairs = true;
+				stairAnimTimer = 0.f;
+				player->startDoorEnterAnimation(); // Use same animation as door
 				return;
 			}
 		}
@@ -855,6 +908,23 @@ void LevelScene::render()
 	if (mapHeight < zoomHeight) camY = (mapHeight - zoomHeight) / 2.0f;
 	else camY = glm::clamp(camY, 0.0f, mapHeight - zoomHeight);
 
+	// Apply camera transition interpolation if transitioning
+	if (cameraTransitioning)
+	{
+		float t = glm::clamp(cameraTransitionTimer / CAMERA_TRANSITION_DURATION, 0.f, 1.f);
+		// Smooth easing (ease-out)
+		t = 1.f - (1.f - t) * (1.f - t);
+		
+		// Clamp start and target too
+		float startX = glm::clamp(cameraStart.x, 0.0f, mapWidth - zoomWidth);
+		float startY = glm::clamp(cameraStart.y, 0.0f, mapHeight - zoomHeight);
+		float targetX = glm::clamp(cameraTarget.x, 0.0f, mapWidth - zoomWidth);
+		float targetY = glm::clamp(cameraTarget.y, 0.0f, mapHeight - zoomHeight);
+		
+		camX = glm::mix(startX, targetX, t);
+		camY = glm::mix(startY, targetY, t);
+	}
+
 	modelview = glm::translate(glm::mat4(1.0f), glm::vec3(-camX, -camY, 0.0f));
 
 	texProgram.use();
@@ -1028,6 +1098,8 @@ void LevelScene::clearLevel() {
 
 	// 4. RESET BOOLEAN STATES
 	enteringDoor = false;
+	enteringStairs = false;
+	cameraTransitioning = false;
 	playerHurting = false;
 	hurtPaused = false;
 	fadingOut = false;
@@ -1037,6 +1109,7 @@ void LevelScene::clearLevel() {
 
 	// 5. NULLIFY PENDING POINTERS
 	pendingDoor = nullptr;
+	pendingStairs = nullptr;
 
 	if (backgroundSprite != nullptr) {
 		delete backgroundSprite;

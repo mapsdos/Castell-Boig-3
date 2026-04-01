@@ -5,12 +5,17 @@ Entity* Follower::clone(ShaderProgram&) const { return nullptr; }
 #include <iostream>
 #include <algorithm>
 
+const float Follower::STAIR_ANIM_DURATION = 400.f; // ~3 frames at 8fps
+
 void Follower::init(const glm::vec2& pos, ShaderProgram& program) {
     Enemy::init(pos, program);
     position = pos;
     timer = 0;
     isClimbing = false;
     lastMoveRight = true;
+    doingStairAnim = false;
+    stairAnimTimer = 0.f;
+    pendingTransport = nullptr;
 
     // Plankton spritesheet: 10 frames of 11x15 pixels
     float frameWidth = 11.0f;
@@ -89,6 +94,27 @@ void Follower::update(int deltaTime) {
 }
 
 void Follower::update(int deltaTime, const glm::vec2& playerPos, const std::vector<Weight*> weights) {
+    // Handle stair animation state first
+    if (doingStairAnim) {
+        stairAnimTimer += deltaTime;
+        sprite->update(deltaTime);
+        
+        if (stairAnimTimer >= STAIR_ANIM_DURATION && !pathSequence.empty()) {
+            // Animation done, do the teleport
+            PathStep& current = pathSequence.front();
+            isClimbing = false;
+            glm::vec2 adjustedPos = current.targetPoint;
+            adjustedPos.y = current.targetPoint.y + (32 - spriteHeight);
+            this->setPosition(adjustedPos);
+            this->velocity = glm::vec2(0,0);
+            pathSequence.erase(pathSequence.begin());
+            
+            doingStairAnim = false;
+            stairAnimTimer = 0.f;
+        }
+        return; // Don't process anything else during animation
+    }
+
     // PATH MANAGEMENT: Update path every 500ms
     timer -= deltaTime;
     if (pathSequence.empty() || (timer <= 0 && pathSequence.begin()->command != AICommand::ASCEND && pathSequence.begin()->command != AICommand::FALL_RIGHT && pathSequence.begin()->command != AICommand::FALL_LEFT && pathSequence.begin()->command != AICommand::FALL)) {
@@ -143,7 +169,7 @@ void Follower::followPath(int deltaTime) {
         handleFall(current, clampedDT); 
         break;
     case AICommand::TRANSPORT:    
-        handleTransport(current); 
+        handleTransport(current, clampedDT); 
         return;
     case AICommand::ASCEND:
         handleAscend(current, clampedDT);
@@ -308,14 +334,13 @@ void Follower::handleFall(PathStep& step, int dt) {
     position.y = nextPos.y;
 }
 
-void Follower::handleTransport(PathStep& step) {
-    isClimbing = false;
-    // targetPoint.y is calculated for 32px sprites (offset -16 from tile position)
-    // For Plankton (20px), we need to adjust: targetY = tileY + tileSize - spriteHeight
-    // Since targetPoint.y = tileY - 16 (for 32px), we add back (32 - spriteHeight) = (32 - 20) = 12
-    glm::vec2 adjustedPos = step.targetPoint;
-    adjustedPos.y = step.targetPoint.y + (32 - spriteHeight);
-    this->setPosition(adjustedPos);
-    this->velocity = glm::vec2(0,0);
-    pathSequence.erase(pathSequence.begin());
+void Follower::handleTransport(PathStep& step, int dt) {
+    // Start the climbing/stairs animation before teleporting
+    if (!doingStairAnim) {
+        doingStairAnim = true;
+        stairAnimTimer = 0.f;
+        isClimbing = true; // This triggers PLANKTON_STAIRS animation in updateAnimation
+        sprite->changeAnimation(PLANKTON_STAIRS);
+        return;
+    }
 }
