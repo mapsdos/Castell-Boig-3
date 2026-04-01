@@ -2,7 +2,7 @@ TILEMAP
 36 28 							-- Size of tile map in tiles
 16 32 							-- Tile size & block size
 assets/images/blocks.png 	    -- Tilesheet
-assets/images/background1.jpg   -- Background
+assets/images/background4.png   -- Background
 5                               -- Number of doors.
 assets/levels/testlvl1.txt       -- Name of room file;
 assets/levels/testlvl2.txt       -- Name of room file;
