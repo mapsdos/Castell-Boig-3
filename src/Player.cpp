@@ -14,6 +14,7 @@ const float Player::GOD_ACTIVATE_DURATION = 875.f; // 7 frames × (1000/8) ms
 const int   Player::HOVER_PIXELS = 4;
 const float Player::HURT_DURATION = 625.f;  // 5 frames × (1000/8) ms
 const float Player::INVINCIBILITY_DURATION = 1500.f;
+const float Player::SHOOT_DURATION = 500.f; // 4 frames × 125ms (at 8fps)
 
 enum PlayerAnims
 {
@@ -22,9 +23,11 @@ enum PlayerAnims
 	GOD_ACTIVATE_RIGHT,  // frames 32-38
 	GOD_MOVE_RIGHT,      // frame 38 (estático)
 	GOD_ACTIVATE_LEFT,   // frames 39-45
-	GOD_MOVE_LEFT,        // frame 45 (estático)
+	GOD_MOVE_LEFT,       // frame 45 (estático)
 	HURT_FROM_RIGHT,
-	HURT_FROM_LEFT
+	HURT_FROM_LEFT,
+	SHOOT_RIGHT,         // frames 56-59
+	SHOOT_LEFT           // frames 60-63
 };
 
 
@@ -108,11 +111,14 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 
 	float widthFrame = 24.0f;
 	float heightFrame = 32.0f;
-	int   numFrames = 56;
+	int   numFrames = 64;  // Updated: 56 original + 8 new shooting frames
 	float frameWidthUV = 1.0f / numFrames;
 	float frameHeightUV = 1.0f;
 
-	bullets = bombs = keys =  actionTimer = 0;
+	bullets = bombs = keys = actionTimer = 0;
+	bShooting = false;
+	shootTimer = 0.f;
+	pendingBullet = false;
 
 	bFloating = false;
 	spritesheet.loadFromFile("assets/images/sprites bob.png", TEXTURE_PIXEL_FORMAT_RGBA);
@@ -121,7 +127,7 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 		glm::vec2(frameWidthUV, frameHeightUV),
 		&spritesheet, &shaderProgram
 	);
-	sprite->setNumberAnimations(15);
+	sprite->setNumberAnimations(17);  // 15 + 2 new shooting animations
 
 	// ── Animaciones originales ─────────────────────────────────────────────
 	sprite->setAnimationSpeed(STAND_RIGHT, 8);
@@ -181,6 +187,15 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 	for (int i = 51; i < 56; i++)
 		sprite->addKeyframe(HURT_FROM_LEFT, glm::vec2(i * frameWidthUV, 0.f));
 
+	// ── Shooting animations (frames 56-63) ────────────────────────────────
+	sprite->setAnimationSpeed(SHOOT_RIGHT, 8);
+	for (int i = 56; i < 60; i++)
+		sprite->addKeyframe(SHOOT_RIGHT, glm::vec2(i * frameWidthUV, 0.f));
+
+	sprite->setAnimationSpeed(SHOOT_LEFT, 8);
+	for (int i = 60; i < 64; i++)
+		sprite->addKeyframe(SHOOT_LEFT, glm::vec2(i * frameWidthUV, 0.f));
+
 	sprite->changeAnimation(STAND_RIGHT);
 	tileMapDispl = tileMapPos;
 	sprite->setPosition(glm::vec2(tileMapDispl + posPlayer));
@@ -239,6 +254,12 @@ void Player::update(int deltaTime, bool wait)
 	}
 
 	sprite->update(deltaTime);
+
+	// During shooting animation, only update sprite and position, no movement or animation changes
+	if (bShooting) {
+		sprite->setPosition(glm::vec2(tileMapDispl + posPlayer) - glm::vec2(0.f, (float)godHoverOffset));
+		return;
+	}
 
 	// --- Toggle god mode (G Key) ---
 	bool gKeyDown = Game::instance().getKey(GLFW_KEY_G);
@@ -514,6 +535,32 @@ void Player::stopJumping()
 
 void Player::playerEvent(LevelScene* levelScene, int deltaTime)
 {
+	// Handle shooting animation
+	if (bShooting)
+	{
+		shootTimer += (float)deltaTime;
+		if (shootTimer >= SHOOT_DURATION)
+		{
+			bShooting = false;
+			shootTimer = 0.f;
+			
+			// Spawn bullet when animation finishes
+			if (pendingBullet)
+			{
+				pendingBullet = false;
+				Bullet* bullet = new Bullet();
+				glm::vec2 spawnPos = glm::vec2(posPlayer.x + tileMapDispl.x + (!facingLeft ? 24 : 0),
+					posPlayer.y + tileMapDispl.y + 12);
+				bullet->init(spawnPos, *program, !facingLeft, "assets/images/bubble-pixel-art.png");
+				levelScene->addBullet(bullet);
+			}
+			
+			// Return to stand animation
+			sprite->changeAnimation(facingLeft ? STAND_LEFT : STAND_RIGHT);
+		}
+		return; // Don't process other actions while shooting
+	}
+
 	if (actionTimer > 0)
 	{
 		actionTimer -= deltaTime;
@@ -525,15 +572,11 @@ void Player::playerEvent(LevelScene* levelScene, int deltaTime)
 			if (bullets > 0)
 			{
 				--bullets;
-				Bullet* bullet = new Bullet();
-				// Spawn slightly in front of Spongebob
-				glm::vec2 spawnPos = glm::vec2(posPlayer.x + tileMapDispl.x + (!facingLeft ? 24 : 0),
-					posPlayer.y + tileMapDispl.y + 12);
-
-				bullet->init(spawnPos, *program, !facingLeft, "assets/images/bubble-pixel-art.png");
-
-				// Adding it to the vector makes it "exist" for the update and render loops
-				levelScene->addBullet(bullet);
+				// Start shooting animation
+				bShooting = true;
+				shootTimer = 0.f;
+				pendingBullet = true;
+				sprite->changeAnimation(facingLeft ? SHOOT_LEFT : SHOOT_RIGHT);
 			}
 			actionTimer = 2000;
 		}
