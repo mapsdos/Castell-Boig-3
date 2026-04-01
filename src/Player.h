@@ -90,6 +90,9 @@ private:
 
 	static const float GOD_ACTIVATE_DURATION; // ms que dura la animación de activación
 	static const int   HOVER_PIXELS;          // píxeles de levitación visual
+
+	float walkStepTimer = 0.0f;
+	const float STEP_INTERVAL = 650.0f;
 };
 
 #endif // _PLAYER_INCLUDE

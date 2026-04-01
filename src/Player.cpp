@@ -3,6 +3,7 @@
 #include "GraphicsConfig.h"
 #include "Player.h"
 #include "Game.h"
+#include "SFX.h"
 #include "LevelScene.h"
 
 #define JUMP_ANGLE_STEP 4
@@ -78,6 +79,8 @@ void Player::heal(int amount)
 
 void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 {
+	SFX::instance().loadSound("walk", "assets/audio/robert-walking.wav");
+	walkStepTimer = 0.0f;
 	program = &shaderProgram;
 	lives = Game::instance().getLives();
 	heartTexture.loadFromFile("assets/images/hearts.png", TEXTURE_PIXEL_FORMAT_RGBA);
@@ -286,6 +289,7 @@ void Player::update(int deltaTime, bool wait)
 				updateFloatingLogic();
 			}
 			else {
+				walkStepTimer += deltaTime;
 				bool moving = handleHorizontalMovement();
 				updateGravityLogic(moving);
 			}
@@ -410,9 +414,14 @@ void Player::handleClimbing()
 
 bool Player::handleHorizontalMovement()
 {
+
 	bool moving = false;
 
 	if (Game::instance().getKey(GLFW_KEY_LEFT)) {
+		if (walkStepTimer >= STEP_INTERVAL) {
+			SFX::instance().playSound("walk", 35.f); // Play the alias you loaded in init
+			walkStepTimer = 0.0f;
+		}
 		facingLeft = true;
 		moving = true;
 		// ONLY change to normal MOVE animation if NOT in god mode
@@ -425,6 +434,10 @@ bool Player::handleHorizontalMovement()
 		}
 	}
 	else if (Game::instance().getKey(GLFW_KEY_RIGHT)) {
+		if (walkStepTimer >= STEP_INTERVAL) {
+			SFX::instance().playSound("walk", 35.f); // Play the alias you loaded in init
+			walkStepTimer = 0.0f;
+		}
 		facingLeft = false;
 		moving = true;
 		// ONLY change to normal MOVE animation if NOT in god mode

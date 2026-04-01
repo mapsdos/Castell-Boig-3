@@ -8,7 +8,7 @@ void Explosion::init(const glm::vec2& pos, ShaderProgram& program) {
     spritesheet.loadFromFile("assets/images/explosion.png", TEXTURE_PIXEL_FORMAT_RGBA);
 
     // 2. Sprite Setup
-    sprite = Sprite::createSprite(glm::ivec2(32, 32), glm::vec2(1.0f / 7.0f, 1.0f), &spritesheet, &program);
+    sprite = Sprite::createSprite(glm::ivec2(64, 64), glm::vec2(1.0f / 7.0f, 1.0f), &spritesheet, &program);
     sprite->setNumberAnimations(1);
     sprite->addKeyframe(0, glm::vec2(0.f, 0.f)); // ... add all 7 frames
     sprite->changeAnimation(0);
@@ -20,7 +20,7 @@ void Explosion::init(const glm::vec2& pos, ShaderProgram& program) {
 
 void Explosion::init(const glm::vec2& pos, Texture* tex, ShaderProgram& program) {
     // 0.1428f is 1/7th of the texture width
-    sprite = Sprite::createSprite(glm::ivec2(32, 32), glm::vec2(0.1428f, 1.0f), tex, &program);
+    sprite = Sprite::createSprite(glm::ivec2(64, 64), glm::vec2(0.1428f, 1.0f), tex, &program);
     sprite->setNumberAnimations(1);
 
     // Add ALL 7 frames

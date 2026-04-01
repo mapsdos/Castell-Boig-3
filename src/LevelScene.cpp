@@ -11,6 +11,7 @@
 #include "Shooter.h"
 #include "Follower.h"
 #include "Explosion.h"
+#include "SFX.h"
 
 #define SCREEN_X 32
 #define SCREEN_Y 16
@@ -66,6 +67,11 @@ void LevelScene::init()
 {
 	clearLevel();
 	initShaders();
+
+	SFX::instance().init();
+
+	// 2. Load the actual files (Make sure the paths match your folders!)
+	SFX::instance().loadSound("explosion", "assets/audio/explosion-sfx.wav");
 	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 
 	vector<string> const& roomFiles = map->getRoomFiles();
@@ -571,10 +577,11 @@ void LevelScene::update(int deltaTime)
 		if ((*w)->getFell())
 		{
 			Explosion* exp = new Explosion();
-			exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 16), &explosionTexture, texProgram);
+			exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 32), &explosionTexture, texProgram);
 			activeEffects.push_back(exp);
 			delete* w;
 			w = weights.erase(w);
+			SFX::instance().playSound("explosion", 70.f);
 		}
 		else
 		{
@@ -600,10 +607,11 @@ void LevelScene::update(int deltaTime)
 			if (bPos.x < eR && bPos.x + 8 > eL && bPos.y < eB && bPos.y + 8 > eT) {
 				enemyKilled = true;
 				Explosion* exp = new Explosion();
-				exp->init(glm::vec2((*bIt)->getPosition().x, (*bIt)->getPosition().y - 16), &explosionTexture, texProgram);
+				exp->init(glm::vec2((*bIt)->getPosition().x, (*bIt)->getPosition().y - 32), &explosionTexture, texProgram);
 				activeEffects.push_back(exp);
 				delete* bIt;
 				bIt = bulletsFired.erase(bIt);
+				SFX::instance().playSound("explosion", 70.f);
 				break; // Stop checking other bullets for this enemy
 			}
 			else ++bIt;
@@ -617,10 +625,11 @@ void LevelScene::update(int deltaTime)
 				if (bmPos.x < eR && bmPos.x + 16 > eL && bmPos.y < eB && bmPos.y + 16 > eT) {
 					enemyKilled = true;
 					Explosion* exp = new Explosion();
-					exp->init(glm::vec2((*bmIt)->getPosition().x, (*bmIt)->getPosition().y - 16), &explosionTexture, texProgram);
+					exp->init(glm::vec2((*bmIt)->getPosition().x, (*bmIt)->getPosition().y - 32), &explosionTexture, texProgram);
 					activeEffects.push_back(exp);
 					delete* bmIt;
 					bmIt = bombsPlaced.erase(bmIt);
+					SFX::instance().playSound("explosion", 70.f);
 					break;
 				}
 				else ++bmIt;
@@ -638,10 +647,11 @@ void LevelScene::update(int deltaTime)
 				if (wL < eR && wR > eL && wT < eB && wB > eT) {
 					enemyKilled = true;
 					Explosion* exp = new Explosion();
-					exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 16), &explosionTexture, texProgram);
+					exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 32), &explosionTexture, texProgram);
 					activeEffects.push_back(exp);
 					delete (*w);
 					w = weights.erase(w);
+					SFX::instance().playSound("explosion", 70.f);
 					break;
 				}
 				else ++w;
