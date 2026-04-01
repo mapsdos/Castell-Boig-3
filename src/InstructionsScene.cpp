@@ -1,5 +1,7 @@
 #include "InstructionsScene.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 InstructionScene::InstructionScene()
 {
     // You can initialize pointers to null here if you didn't in the header
@@ -18,14 +20,25 @@ InstructionScene::~InstructionScene()
 
 void InstructionScene::init()
 {
+    // 1. CRITICAL: Initialize the shaders from the base class
+    initShaders();
 
-	backgroundTexture.loadFromFile("assets/images/InstructionBackground.jpg", TEXTURE_PIXEL_FORMAT_RGBA);
+    // 2. CRITICAL: Setup the 2D coordinate system
+    // If your game uses 640x480 pixels, use this:
+    projection = glm::ortho(0.f, 640.f, 480.f, 0.f);
+    // (If you want to use the 80x60 units from the menu, use those numbers instead)
 
-	// Create a sprite the size of the screen
-	backgroundSprite = Sprite::createSprite(glm::ivec2(640, 480), glm::vec2(1.f, 1.f), &backgroundTexture, &texProgram);
-	backgroundSprite->setNumberAnimations(1);
-	backgroundSprite->addKeyframe(0, glm::vec2(0.f, 0.f));
-	backgroundSprite->changeAnimation(0);
+    // 3. Load the texture and check if it actually worked
+    backgroundTexture.loadFromFile("assets/images/InstructionBackground.png", TEXTURE_PIXEL_FORMAT_RGBA);
+
+    // 4. Create the sprite
+    // Match the size to your projection (640, 480)
+    backgroundSprite = Sprite::createSprite(glm::ivec2(640, 480), glm::vec2(1.f, 1.f), &backgroundTexture, &texProgram);
+
+    backgroundSprite->setNumberAnimations(1);
+    backgroundSprite->addKeyframe(0, glm::vec2(0.f, 0.f));
+    backgroundSprite->changeAnimation(0);
+    backgroundSprite->setPosition(glm::vec2(0.f, 0.f));
 }
 
 void InstructionScene::update(int deltaTime)
