@@ -607,7 +607,7 @@ void LevelScene::update(int deltaTime)
 			if (bPos.x < eR && bPos.x + 8 > eL && bPos.y < eB && bPos.y + 8 > eT) {
 				enemyKilled = true;
 				Explosion* exp = new Explosion();
-				exp->init(glm::vec2((*bIt)->getPosition().x, (*bIt)->getPosition().y - 32), &explosionTexture, texProgram);
+				exp->init(glm::vec2((*eIt)->getPosition().x, (*eIt)->getPosition().y), &explosionTexture, texProgram);
 				activeEffects.push_back(exp);
 				delete* bIt;
 				bIt = bulletsFired.erase(bIt);
@@ -625,7 +625,7 @@ void LevelScene::update(int deltaTime)
 				if (bmPos.x < eR && bmPos.x + 16 > eL && bmPos.y < eB && bmPos.y + 16 > eT) {
 					enemyKilled = true;
 					Explosion* exp = new Explosion();
-					exp->init(glm::vec2((*bmIt)->getPosition().x, (*bmIt)->getPosition().y - 32), &explosionTexture, texProgram);
+					exp->init(glm::vec2((*eIt)->getPosition().x, (*eIt)->getPosition().y), &explosionTexture, texProgram);
 					activeEffects.push_back(exp);
 					delete* bmIt;
 					bmIt = bombsPlaced.erase(bmIt);
@@ -647,7 +647,7 @@ void LevelScene::update(int deltaTime)
 				if (wL < eR && wR > eL && wT < eB && wB > eT) {
 					enemyKilled = true;
 					Explosion* exp = new Explosion();
-					exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 32), &explosionTexture, texProgram);
+					exp->init(glm::vec2((*eIt)->getPosition().x, (*eIt)->getPosition().y), &explosionTexture, texProgram);
 					activeEffects.push_back(exp);
 					delete (*w);
 					w = weights.erase(w);
