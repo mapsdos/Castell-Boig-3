@@ -19,8 +19,6 @@ public:
 private:
 	int movementTimer = 1000;
 	bool isIdle = false;
-	int spriteWidth = 28;
-	int spriteHeight = 60;
 	void updateAnimation();
 };
 

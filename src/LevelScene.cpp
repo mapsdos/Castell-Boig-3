@@ -204,7 +204,7 @@ void LevelScene::init()
 				newClock->init(glm::vec2(x, y), texProgram);
 				items.push_back(newClock);
 			}
-			else if (tileId == 11)
+			case 11:
 			{
 				Patroller* patroller = new Patroller();
 				patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
@@ -212,8 +212,9 @@ void LevelScene::init()
 				patroller->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (38 - map->getTileSize())));
 				patroller->setTileMap(map);
 				enemies.push_back(patroller);
+				break;
 			}
-			else if (tileId == 12)
+			case 12:
 			{
 				Shooter* shooter = new Shooter();
 				shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
@@ -221,6 +222,7 @@ void LevelScene::init()
 				shooter->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (40 - map->getTileSize())));
 				shooter->setTileMap(map);
 				enemies.push_back(shooter);
+				break;
 			}
 			case 13:
 			{
@@ -230,6 +232,7 @@ void LevelScene::init()
 				follower->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (20 - map->getTileSize())));
 				follower->setTileMap(map);
 				enemies.push_back(follower);
+			}
 			}
 		}
 	}
@@ -606,9 +609,9 @@ void LevelScene::update(int deltaTime)
 		// 1. Calculate Enemy Hitbox (World Space)
 		// Using the same +SCREEN_X/Y logic your weights/player use
 		float eL = (*eIt)->getPosition().x + SCREEN_X + 4; // 4px padding for tighter hits
-		float eR = eL + 24;
+		float eR = eL + (*eIt)->getWidth();
 		float eT = (*eIt)->getPosition().y + SCREEN_Y + 4;
-		float eB = eT + 24;
+		float eB = eT + (*eIt)->getHeight();
 
 		// A. Check Bullets
 		for (auto bIt = bulletsFired.begin(); bIt != bulletsFired.end(); ) {

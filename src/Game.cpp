@@ -47,7 +47,7 @@ void Game::init()
 	level1Scene = new LevelScene("assets/levels/level01.txt",player);
 	level2Scene = new LevelScene("assets/levels/level02.txt",player);
 	level3Scene = new LevelScene("assets/levels/level03.txt",player);
-	level4Scene = new LevelScene();
+	level4Scene = new LevelScene("assets/levels/level04.txt", player);
 	level5Scene = new LevelScene();
 }
 
@@ -80,6 +80,9 @@ void Game::keyPressed(int key)
 	if (key == GLFW_KEY_2) { setStateToPlaying(); getNextLevel(level1Scene); }
 	if (key == GLFW_KEY_3) {
 		setStateToPlaying(); getNextLevel(level2Scene);
+	}
+	if (key == GLFW_KEY_4) {
+		setStateToPlaying(); getNextLevel(level3Scene);
 	}
 	if (key == GLFW_KEY_K)
 	{
