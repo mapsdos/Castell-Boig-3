@@ -91,26 +91,13 @@ void Follower::update(int deltaTime) {
 void Follower::update(int deltaTime, const glm::vec2& playerPos, const std::vector<Weight*> weights) {
     // PATH MANAGEMENT: Update path every 500ms
     timer -= deltaTime;
-    if (pathSequence.empty() || timer <= 0) {
+    if (pathSequence.empty() || (timer <= 0 && pathSequence.begin()->command != AICommand::ASCEND && pathSequence.begin()->command != AICommand::FALL_RIGHT && pathSequence.begin()->command != AICommand::FALL_LEFT && pathSequence.begin()->command != AICommand::FALL)) {
         // Use centers for pathfinding logic
         glm::vec2 feetPos = glm::vec2(position.x + spriteWidth / 2, position.y + spriteHeight - 8);
         glm::vec2 playerFeet = glm::vec2(playerPos.x + 16, playerPos.y + 16);
 
         pathSequence = map->getPath(feetPos, playerFeet, weights);
         timer = 500;
-        
-        // Filter out jump-related commands (ASCEND, FALL_LEFT, FALL_RIGHT)
-        // Plankton can only walk, climb vines, and fall straight down
-        auto it = pathSequence.begin();
-        while (it != pathSequence.end()) {
-            if (it->command == AICommand::ASCEND || 
-                it->command == AICommand::FALL_LEFT || 
-                it->command == AICommand::FALL_RIGHT) {
-                it = pathSequence.erase(it);
-            } else {
-                ++it;
-            }
-        }
     }
 
     // Update the Brain
@@ -158,10 +145,57 @@ void Follower::followPath(int deltaTime) {
     case AICommand::TRANSPORT:    
         handleTransport(current); 
         return;
-    default:
-        // Skip unsupported commands (ASCEND, FALL_LEFT, FALL_RIGHT)
-        pathSequence.erase(pathSequence.begin());
+    case AICommand::ASCEND:
+        handleAscend(current, clampedDT);
+	    break;
+    case AICommand::FALL_LEFT:
+    case AICommand::FALL_RIGHT:
+        handleLeap(current, clampedDT);
         break;
+    default:
+        break;
+    }
+}
+
+void Follower::handleLeap(PathStep& step, int dt) {
+    int floorY;
+
+    if (velocity.y >= 0 && map->collisionMoveDown(glm::ivec2(position.x + 8, position.y + 1), glm::ivec2(16, 32), &floorY))
+    {
+        velocity = glm::vec2(0, 0);
+        pathSequence.erase(pathSequence.begin());
+        return;
+    }
+
+    float power = 0.3f;
+    if (abs(velocity.x) < 0.01f) {
+        velocity.x = (step.command == AICommand::FALL_RIGHT) ? power : -power;
+    }
+
+    velocity.y += 0.0025f * (float)dt;
+    if (velocity.y > 0.6f) velocity.y = 0.6f;
+
+    // PREDICT next position first
+    glm::vec2 nextPos = position + velocity * (float)dt;
+
+    position = nextPos;
+}
+
+
+void Follower::handleAscend(PathStep& step, int dt) {
+    // Absolute X-lock to prevent any side-to-side jitter during the rise
+    velocity.x = 0;
+
+    float liftSpeed = 0.25f;
+    position.y -= liftSpeed * (float)dt;
+
+    cout << position.y << ' ' << step.targetPoint.y << '\n';
+
+    // Check arrival at the "peak"
+    if (position.y <= step.targetPoint.y) {
+        position.y = step.targetPoint.y;
+        velocity.y = 0; // Prepare for the transition to FALL_LEFT/RIGHT
+        pathSequence.erase(pathSequence.begin());
     }
 }
 

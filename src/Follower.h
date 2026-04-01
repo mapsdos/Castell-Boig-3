@@ -25,6 +25,8 @@ private:
 	void handleFall(PathStep& step, int dt);
 	void handleTransport(PathStep& step);
 	void updateAnimation();
+	void handleAscend(PathStep& step, int dt);
+	void handleLeap(PathStep& step, int dt);
 
 	int timer;
 	bool isClimbing = false;
