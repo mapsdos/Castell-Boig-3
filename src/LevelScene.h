@@ -55,6 +55,7 @@ private:
 	std::vector<Bullet*> bulletsFired;
 	std::vector<Bomb*> bombsPlaced;
 	std::vector<Weight*> weights;
+	std::vector<Entity*> activeEffects;
 	float stairCooldown = 0.0f;
 	const float STAIR_DELAY = 100.0f;
 	int doorNum;
@@ -89,6 +90,13 @@ private:
 
 	Texture backgroundTexture;
 	Sprite* backgroundSprite = nullptr;
+
+	bool firstCall = true;
+
+	Texture keyHudTex, bubbleHudTex, bombHudTex, numbersTex;
+	Sprite* keyIcon, * bubbleIcon, * bombIcon, * numberSprite = nullptr;
+
+	Texture explosionTexture;
 };
 
 #endif

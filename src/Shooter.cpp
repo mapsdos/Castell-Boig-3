@@ -218,10 +218,10 @@ void Shooter::update(int deltaTime, const std::vector<Weight*> weights)
     float speed = 0.04f * deltaTime;
 
     // Hitbox for Squidward (28x62)
-    float pL = position.x;
-    float pR = pL + spriteWidth;
-    float pT = position.y;
-    float pB = pT + spriteHeight;
+    float pL = position.x + tileMapDispl.x;
+    float pR = pL + spriteWidth + 4;
+    float pT = position.y + tileMapDispl.y;
+    float pB = pT + spriteHeight + tileMapDispl.y;
 
     for (Weight* w : weights) {
         float wL = w->getPosition().x;

@@ -189,8 +189,6 @@ void Follower::handleAscend(PathStep& step, int dt) {
     float liftSpeed = 0.25f;
     position.y -= liftSpeed * (float)dt;
 
-    cout << position.y << ' ' << step.targetPoint.y << '\n';
-
     // Check arrival at the "peak"
     if (position.y <= step.targetPoint.y) {
         position.y = step.targetPoint.y;

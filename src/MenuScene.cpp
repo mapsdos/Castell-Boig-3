@@ -61,10 +61,12 @@ MenuScene::~MenuScene()
 
 void MenuScene::loadButtonTextures()
 {
-	const char* buttonFiles[3] = {
+	const char* buttonFiles[4] = {
 		"assets/images/menu/buttons/spritesheet play button.png",
 		"assets/images/menu/buttons/spritesheet guide button.png",
+		"assets/images/menu/buttons/spritesheet credits button.png",
 		"assets/images/menu/buttons/spritesheet exit button.png"
+		
 	};
 
 	float centerX = 67.f;
@@ -78,7 +80,7 @@ void MenuScene::loadButtonTextures()
 	float frameWidthUV = (sheetWidth / 3.0f) / sheetWidth;
 	float frameHeightUV = 1.0f;
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 4; i++) {
 		Button newButton;
 
 		newButton.texture = new Texture();
@@ -444,10 +446,16 @@ void MenuScene::activateCurrentButton()
 
 	case 1:
 		std::cout << "INSTRUCCIONES seleccionado" << std::endl;
+		Game::instance().changeState(INSTRUCTIONS);
 		break;
 
 	case 2:
 		std::cout << "CREDITOS seleccionado" << std::endl;
+		Game::instance().changeState(CREDITS);
+		break;
+	case 3:
+		std::cout << "SALIR seleccionado" << std::endl;
+		exit(0);
 		break;
 	}
 }

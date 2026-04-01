@@ -10,12 +10,24 @@
 #include "Patroller.h"
 #include "Shooter.h"
 #include "Follower.h"
+#include "Explosion.h"
+#include "SFX.h"
 
 #define SCREEN_X 32
 #define SCREEN_Y 16
 
 #define INIT_PLAYER_X_TILES 4
 #define INIT_PLAYER_Y_TILES 25
+
+namespace {
+	template<typename EntityType> void createEntity(std::vector<Enemy*>& entities, TileMap* map, ShaderProgram& texProgram, int i, int j) {
+		EntityType* entity = new EntityType();
+		entity->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
+		entity->setPosition(glm::vec2(i * map->getTileSize() - SCREEN_X, (j * map->getTileSize()) - SCREEN_Y));
+		entity->setTileMap(map);
+		entities.push_back(entity);
+	}
+}
 
 
 LevelScene::LevelScene()
@@ -24,6 +36,10 @@ LevelScene::LevelScene()
 	player = NULL;
 	doorNum = 0;
 	path = "";
+	keyIcon = nullptr;
+	bubbleIcon = nullptr;
+	bombIcon = nullptr;
+	numberSprite = nullptr;
 }
 
 LevelScene::LevelScene(string setPath, Player* setPlayer)
@@ -32,6 +48,10 @@ LevelScene::LevelScene(string setPath, Player* setPlayer)
 	player = setPlayer;
 	doorNum = 0;
 	path = setPath;
+	keyIcon = nullptr;
+	bubbleIcon = nullptr;
+	bombIcon = nullptr;
+	numberSprite = nullptr;
 }
 
 LevelScene::~LevelScene()
@@ -47,6 +67,11 @@ void LevelScene::init()
 {
 	clearLevel();
 	initShaders();
+
+	SFX::instance().init();
+
+	// 2. Load the actual files (Make sure the paths match your folders!)
+	SFX::instance().loadSound("explosion", "assets/audio/explosion-sfx.wav");
 	map = TileMap::createTileMap(path, glm::vec2(SCREEN_X, SCREEN_Y), texProgram);
 
 	vector<string> const& roomFiles = map->getRoomFiles();
@@ -54,6 +79,7 @@ void LevelScene::init()
 	doorNum = 0;
 	stoppedTime = false;
 	timeStopped = 0;
+	firstCall = true;
 
 	// Reset death/hurt states
 	playerHurting = false;
@@ -66,30 +92,62 @@ void LevelScene::init()
 	youDiedTimer = 0.f;
 	youDiedFading = false;
 
+	explosionTexture.loadFromFile("assets/images/explosion1.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	explosionTexture.setMinFilter(GL_NEAREST);
+	explosionTexture.setMagFilter(GL_NEAREST);
+
+	keyHudTex.loadFromFile("assets/images/pixel-key.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	bubbleHudTex.loadFromFile("assets/images/bubble-blower-stick-pixel-art.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	bombHudTex.loadFromFile("assets/images/pixel-art-bomb-off.png", TEXTURE_PIXEL_FORMAT_RGBA);
+	numbersTex.loadFromFile("assets/images/numbers.png", TEXTURE_PIXEL_FORMAT_RGBA);
+
+	// Set filters to NEAREST for sharp pixel art
+	keyHudTex.setMinFilter(GL_NEAREST); keyHudTex.setMagFilter(GL_NEAREST);
+	bubbleHudTex.setMinFilter(GL_NEAREST); bubbleHudTex.setMagFilter(GL_NEAREST);
+	bombHudTex.setMinFilter(GL_NEAREST); bombHudTex.setMagFilter(GL_NEAREST);
+	numbersTex.setMinFilter(GL_NEAREST); numbersTex.setMagFilter(GL_NEAREST);
+
+	// 2. Create the HUD Sprites
+	glm::vec2 fullUV(1.0f, 1.0f); // Icons are full single images
+	keyIcon = Sprite::createSprite(glm::ivec2(16, 16), fullUV, &keyHudTex, &texProgram);
+	bubbleIcon = Sprite::createSprite(glm::ivec2(16, 16), fullUV, &bubbleHudTex, &texProgram);
+	bombIcon = Sprite::createSprite(glm::ivec2(16, 16), fullUV, &bombHudTex, &texProgram);
+
+	// 3. Create the Numbers Sprite (10 frames side-by-side in one file)
+	// The spritesheet width is divided into 10 frames, so UV step is 0.1
+	numberSprite = Sprite::createSprite(glm::ivec2(12, 12), glm::vec2(0.1f, 1.0f), &numbersTex, &texProgram);
+	numberSprite->setNumberAnimations(10);
+	for (int i = 0; i < 10; i++) {
+		// Frame 0 is the '0', Frame 1 is the '1', etc.
+		numberSprite->addKeyframe(i, glm::vec2(i * 0.1f, 0.0f));
+	}
+
 	glm::ivec2 size = map->getMapSize();
 	for (int j = 0; j < size.y; j++) {
 		for (int i = 0; i < size.x; i++) {
 			// Check the map data for the key ID (2)
 			int tileId = map->getTileIdAt(glm::ivec2(i * map->getTileSize(), j * map->getTileSize()));
-			if (tileId == 5) {
-				Key* newKey = new Key();
-
-				// Calculate pixel position: (Column * TileSize, Row * TileSize)
+			// Calculate pixel position: (Column * TileSize, Row * TileSize)
 				// Add SCREEN_X/Y if your map has an offset
 				// In LevelScene.cpp init()
-				float x = SCREEN_X + (i * map->getTileSize());
-				// Subtract 16 (or the difference between sprite height and tile height) 
-				// to pull the key "up" out of the floor
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
+			float x = static_cast<float>(SCREEN_X + (i * map->getTileSize()));
+			// Subtract 16 (or the difference between sprite height and tile height) 
+			// to pull the key "up" out of the floor
+			float y = static_cast<float>(SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize()));
+			switch (tileId)
+			{
+			case 5:
+			{
+				Key* newKey = new Key();
 
 				newKey->init(glm::vec2(x, y), texProgram);
 				keys.push_back(newKey);
+				break;
 			}
-			// Inside the tile loop where tileId == 4
-			else if (tileId == 4) {
+			case 4:
+				// Inside the tile loop where tileId == 4
+			{
 				Door* newDoor = new Door();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newDoor->init(glm::vec2(x, y), texProgram);
 
 				if (roomSize > 0) {
@@ -107,51 +165,46 @@ void LevelScene::init()
 					--roomSize;
 				}
 				doors.push_back(newDoor);
+				break;
 			}
-			else if (tileId == 10)
+			case 10:
 			{
 				KeyDoor* newKeyDoor = new KeyDoor();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newKeyDoor->init(glm::vec2(x, y), texProgram);
 
 				doors.insert(doors.begin(), newKeyDoor);
+				break;
 			}
-			else if (tileId == 7)
+			case 7:
 			{
 				BubbleGun* newBubbleGun = new BubbleGun();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newBubbleGun->init(glm::vec2(x, y), texProgram);
 				items.push_back(newBubbleGun);
+				break;
 			}
-			else if (tileId == 8)
+			case 8:
 			{
 				Bomb* newBomb = new Bomb();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newBomb->init(glm::vec2(x, y), texProgram);
 				items.push_back(newBomb);
+				break;
 			}
-			else if (tileId == 2)
+			case 2:
 			{
 				map->setMapTile(glm::vec2(i, j));
 				Weight* newWeight = new Weight();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize());
-				newWeight->init(glm::vec2(x, y), texProgram);
+				newWeight->init(glm::vec2(x, y + SCREEN_Y), texProgram);
 				newWeight->setTileMap(map);
 				weights.push_back(newWeight);
+				break;
 			}
-			else if (tileId == 9)
+			case 9:
 			{
 				Clock* newClock = new Clock();
-				float x = SCREEN_X + (i * map->getTileSize());
-				float y = SCREEN_Y + (j * map->getTileSize()) - (32 - map->getTileSize());
 				newClock->init(glm::vec2(x, y), texProgram);
 				items.push_back(newClock);
 			}
-			else if (tileId == 11)
+			case 11:
 			{
 				Patroller* patroller = new Patroller();
 				patroller->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
@@ -159,8 +212,9 @@ void LevelScene::init()
 				patroller->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (38 - map->getTileSize())));
 				patroller->setTileMap(map);
 				enemies.push_back(patroller);
+				break;
 			}
-			else if (tileId == 12)
+			case 12:
 			{
 				Shooter* shooter = new Shooter();
 				shooter->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
@@ -168,8 +222,9 @@ void LevelScene::init()
 				shooter->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (40 - map->getTileSize())));
 				shooter->setTileMap(map);
 				enemies.push_back(shooter);
+				break;
 			}
-			else if (tileId == 13)
+			case 13:
 			{
 				Follower* follower = new Follower();
 				follower->init(glm::ivec2(SCREEN_X, SCREEN_Y), texProgram);
@@ -177,6 +232,7 @@ void LevelScene::init()
 				follower->setPosition(glm::vec2(i * map->getTileSize(), (j * map->getTileSize()) - (20 - map->getTileSize())));
 				follower->setTileMap(map);
 				enemies.push_back(follower);
+			}
 			}
 		}
 	}
@@ -242,7 +298,26 @@ void LevelScene::init()
 
 void LevelScene::update(int deltaTime)
 {
+	if (firstCall)
+	{
+		firstCall = false;
+		deltaTime = 0;
+	}
 	currentTime += deltaTime;
+
+	for (auto it = activeEffects.begin(); it != activeEffects.end(); ) {
+		(*it)->update(deltaTime);
+
+		// Cast to Explosion to check if finished
+		Explosion* exp = dynamic_cast<Explosion*>(*it);
+		if (exp && exp->isFinished()) {
+			delete* it;
+			it = activeEffects.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
 
 	// ── YOU DIED FADE: fade out después de mostrar "you died" ──────────
 	if (youDiedFading)
@@ -468,6 +543,7 @@ void LevelScene::update(int deltaTime)
 		if (pL < iR && pR > iL && pT < iB && pB > iT) {
 			delete* it;
 			it = keys.erase(it);
+			player->addKey(1);
 		}
 		else
 		{
@@ -513,8 +589,12 @@ void LevelScene::update(int deltaTime)
 		(*w)->update(deltaTime);
 		if ((*w)->getFell())
 		{
+			Explosion* exp = new Explosion();
+			exp->init(glm::vec2((*w)->getPosition().x, (*w)->getPosition().y - 32), &explosionTexture, texProgram);
+			activeEffects.push_back(exp);
 			delete* w;
 			w = weights.erase(w);
+			SFX::instance().playSound("explosion", 70.f);
 		}
 		else
 		{
@@ -529,9 +609,9 @@ void LevelScene::update(int deltaTime)
 		// 1. Calculate Enemy Hitbox (World Space)
 		// Using the same +SCREEN_X/Y logic your weights/player use
 		float eL = (*eIt)->getPosition().x + SCREEN_X + 4; // 4px padding for tighter hits
-		float eR = eL + 24;
+		float eR = eL + (*eIt)->getWidth();
 		float eT = (*eIt)->getPosition().y + SCREEN_Y + 4;
-		float eB = eT + 24;
+		float eB = eT + (*eIt)->getHeight();
 
 		// A. Check Bullets
 		for (auto bIt = bulletsFired.begin(); bIt != bulletsFired.end(); ) {
@@ -539,8 +619,12 @@ void LevelScene::update(int deltaTime)
 			// Assuming Bullet is 8x8 pixels
 			if (bPos.x < eR && bPos.x + 8 > eL && bPos.y < eB && bPos.y + 8 > eT) {
 				enemyKilled = true;
+				Explosion* exp = new Explosion();
+				exp->init(glm::vec2((*eIt)->getPosition().x, (*eIt)->getPosition().y), &explosionTexture, texProgram);
+				activeEffects.push_back(exp);
 				delete* bIt;
 				bIt = bulletsFired.erase(bIt);
+				SFX::instance().playSound("explosion", 70.f);
 				break; // Stop checking other bullets for this enemy
 			}
 			else ++bIt;
@@ -553,8 +637,12 @@ void LevelScene::update(int deltaTime)
 				// Assuming Bomb is 16x16 pixels
 				if (bmPos.x < eR && bmPos.x + 16 > eL && bmPos.y < eB && bmPos.y + 16 > eT) {
 					enemyKilled = true;
+					Explosion* exp = new Explosion();
+					exp->init(glm::vec2((*eIt)->getPosition().x, (*eIt)->getPosition().y), &explosionTexture, texProgram);
+					activeEffects.push_back(exp);
 					delete* bmIt;
 					bmIt = bombsPlaced.erase(bmIt);
+					SFX::instance().playSound("explosion", 70.f);
 					break;
 				}
 				else ++bmIt;
@@ -563,17 +651,23 @@ void LevelScene::update(int deltaTime)
 
 		// C. Check Weights (Always kills on contact)
 		if (!enemyKilled) {
-			for (Weight* w : weights) {
-				float wL = w->getPosition().x; // Weight is already in World Space
+			for (auto w = weights.begin(); w != weights.end();) {
+				float wL = (*w)->getPosition().x; // Weight is already in World Space
 				float wR = wL + 16;
-				float wT = w->getPosition().y;
+				float wT = (*w)->getPosition().y;
 				float wB = wT + 16;
 
 				if (wL < eR && wR > eL && wT < eB && wB > eT) {
 					enemyKilled = true;
-					// Note: We don't delete the weight here so it can crush multiple enemies
+					Explosion* exp = new Explosion();
+					exp->init(glm::vec2((*eIt)->getPosition().x, (*eIt)->getPosition().y), &explosionTexture, texProgram);
+					activeEffects.push_back(exp);
+					delete (*w);
+					w = weights.erase(w);
+					SFX::instance().playSound("explosion", 70.f);
 					break;
 				}
+				else ++w;
 			}
 		}
 
@@ -738,132 +832,107 @@ void LevelScene::render()
 	float zoomHeight = 240.0f;
 	projection = glm::ortho(0.f, zoomWidth, zoomHeight, 0.f);
 
-	// 1. Calculate Player World Position (Center of Sprite)
-	// We add the screen offsets because the tiles are drawn starting at 32, 16
+	// 1. Calculate Camera Logic
 	float playerWorldX = player->getPosition().x + SCREEN_X + 12.0f;
 	float playerWorldY = player->getPosition().y + SCREEN_Y + 16.0f;
-
 	float camX = playerWorldX - (zoomWidth / 2.0f);
 	float camY = playerWorldY - (zoomHeight / 2.0f);
-
-	// 2. Calculate Total Map Bounds including the SCREEN_X/Y margins
 	float mapWidth = (map->getMapSize().x * map->getTileSize()) + (SCREEN_X * 2);
 	float mapHeight = (map->getMapSize().y * map->getTileSize()) + (SCREEN_Y * 2);
 
-	// 3. Clamping Logic
-	// This prevents the camera from showing the "void" outside the map
-	if (mapWidth < zoomWidth)
-		camX = (mapWidth - zoomWidth) / 2.0f;
-	else
-		camX = glm::clamp(camX, 0.0f, mapWidth - zoomWidth);
+	if (mapWidth < zoomWidth) camX = (mapWidth - zoomWidth) / 2.0f;
+	else camX = glm::clamp(camX, 0.0f, mapWidth - zoomWidth);
+	if (mapHeight < zoomHeight) camY = (mapHeight - zoomHeight) / 2.0f;
+	else camY = glm::clamp(camY, 0.0f, mapHeight - zoomHeight);
 
-	if (mapHeight < zoomHeight)
-		camY = (mapHeight - zoomHeight) / 2.0f;
-	else
-		camY = glm::clamp(camY, 0.0f, mapHeight - zoomHeight);
-
-	// 4. Apply View Matrix
 	modelview = glm::translate(glm::mat4(1.0f), glm::vec3(-camX, -camY, 0.0f));
 
 	texProgram.use();
 
-	// --- BACKGROUND RENDERING ---
+	// --- 1. BACKGROUND ---
 	if (backgroundSprite != nullptr) {
-		// Use the standard game projection (zoomWidth x zoomHeight) 
-		// so the background is scaled correctly relative to tiles
 		texProgram.setUniformMatrix4f("projection", projection);
-
-		// PARALLAX: Multiply camera movement by a factor (0.0 to 1.0)
-		// 0.2 means it moves very slowly (far away), 0.8 moves almost with the player
 		float parallaxFactor = 0.3f;
 		glm::mat4 bgModelview = glm::translate(glm::mat4(1.0f), glm::vec3(-camX * parallaxFactor, -camY * parallaxFactor, 0.0f));
-
 		texProgram.setUniformMatrix4f("modelview", bgModelview);
 		backgroundSprite->render(bgModelview);
 	}
 
+	// --- 2. WORLD OBJECTS (Tiles, Enemies, Player) ---
 	texProgram.setUniformMatrix4f("projection", projection);
 	texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
 	texProgram.setUniformMatrix4f("modelview", modelview);
 	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f);
+
 	map->render();
-	// Make one per items
-	for (unsigned int i = 0; i < keys.size(); i++) {
-		keys[i]->render(modelview);
-	}
-	for (unsigned int i = 0; i < items.size(); i++) {
-		items[i]->render(modelview);
-	}
-	for (unsigned int i = 0; i < stairs.size(); i++)
-	{
-		stairs[i]->render(modelview);
-	}
-	for (unsigned int i = 0; i < doors.size(); i++)
-	{
-		doors[i]->render(modelview);
-	}
-	for (unsigned int i = 0; i < enemies.size(); i++)
-	{
-		enemies[i]->render(modelview);
-	}
-	for (auto bullet : bulletsFired)
-	{
-		bullet->render(modelview);
-	}
-	for (auto bomb : bombsPlaced)
-	{
-		bomb->render(modelview);
-	}
-	for (auto weight : weights)
-	{
-		weight->render(modelview);
-	}
+
+	for (unsigned int i = 0; i < keys.size(); i++) keys[i]->render(modelview);
+	for (unsigned int i = 0; i < items.size(); i++) items[i]->render(modelview);
+	for (unsigned int i = 0; i < stairs.size(); i++) stairs[i]->render(modelview);
+	for (unsigned int i = 0; i < doors.size(); i++) doors[i]->render(modelview);
+	for (unsigned int i = 0; i < enemies.size(); i++) enemies[i]->render(modelview);
+	for (auto bullet : bulletsFired) bullet->render(modelview);
+	for (auto bomb : bombsPlaced) bomb->render(modelview);
+	for (auto weight : weights) weight->render(modelview);
+
 	player->render(modelview);
-	// ── Overlays (en espacio de pantalla, sin cámara) ──────────────────
+
+	for (auto effect : activeEffects) {
+		effect->render(modelview);
+	}
+
+	// --- 3. HUD (SCREEN SPACE - DRAWN LAST TO BE ON TOP) ---
+	glm::mat4 identity = glm::mat4(1.0f);
+	glm::mat4 hudProj = glm::ortho(0.f, 640.f, 480.f, 0.f);
+
+	texProgram.setUniformMatrix4f("projection", hudProj);
+	texProgram.setUniformMatrix4f("modelview", identity);
+	texProgram.setUniform2f("texCoordDispl", 0.f, 0.f); // FIX: Ensure no offset from previous renders
+	texProgram.setUniform4f("color", 1.0f, 1.0f, 1.0f, 1.0f);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	auto drawHUDItem = [&](Sprite* icon, int count, float x, float y) {
+		if (icon == nullptr || numberSprite == nullptr) return;
+		icon->setPosition(glm::vec2(x, y));
+		icon->render(identity);
+
+		int val = glm::clamp(count, 0, 9);
+		numberSprite->changeAnimation(val);
+		numberSprite->setPosition(glm::vec2(x + 18, y + 2));
+		numberSprite->render(identity);
+		};
+
+	drawHUDItem(keyIcon, player->getKeyCount(), 580.f, 30.f);
+	drawHUDItem(bubbleIcon, player->getBulletCount(), 580.f, 50.f);
+	drawHUDItem(bombIcon, player->getBombCount(), 580.f, 70.f);
+
+	// --- 4. OVERLAYS (Death, Fades) ---
 	if (fadingOut || youDied || youDiedFading)
 	{
-		glm::mat4 identity = glm::mat4(1.0f);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		texProgram.setUniformMatrix4f("modelview", identity);
-		// Proyección ortho simple para pantalla completa
+		// ... (Your existing overlay code is fine here as it also uses identity/hudProj)
+		// Ensure screenProj matches hudProj (640x480)
 		glm::mat4 screenProj = glm::ortho(0.f, 640.f, 480.f, 0.f);
 		texProgram.setUniformMatrix4f("projection", screenProj);
+		texProgram.setUniformMatrix4f("modelview", identity);
 
-		if (fadingOut)
-		{
-			// Fade negro normal al perder una vida
+		if (fadingOut) {
 			texProgram.setUniform4f("color", 0.f, 0.f, 0.f, fadeAlpha);
 			fadeSprite->render(identity);
 		}
-
-		if (youDied)
-		{
-			// Filtro gris semi-transparente sobre la escena
-			texProgram.setUniform4f("color", 0.3f, 0.3f, 0.3f, 0.4f);
-			fadeSprite->render(identity);
-			// Imagen "YOU DIED" encima
-			texProgram.setUniform4f("color", 1.f, 1.f, 1.f, 1.f);
-			youDiedSprite->render(identity);
-		}
-
-		if (youDiedFading)
-		{
-			// Mantener filtro gris + you died, y añadir fade negro encima
+		if (youDied || youDiedFading) {
 			texProgram.setUniform4f("color", 0.3f, 0.3f, 0.3f, 0.4f);
 			fadeSprite->render(identity);
 			texProgram.setUniform4f("color", 1.f, 1.f, 1.f, 1.f);
 			youDiedSprite->render(identity);
-			// Fade negro encima de todo
-			texProgram.setUniform4f("color", 0.f, 0.f, 0.f, fadeAlpha);
-			fadeSprite->render(identity);
+			if (youDiedFading) {
+				texProgram.setUniform4f("color", 0.f, 0.f, 0.f, fadeAlpha);
+				fadeSprite->render(identity);
+			}
 		}
-
-		glDisable(GL_BLEND);
-		// Restaurar color
-		texProgram.setUniform4f("color", 1.f, 1.f, 1.f, 1.f);
 	}
+	glDisable(GL_BLEND);
 }
 
 void LevelScene::setDoorNum(int numDoor)
@@ -890,9 +959,14 @@ void LevelScene::collectKeys()
 	{
 		if (d->getKind() == DoorType::OPENDOOR)
 		{
+			if (d->getRoom()->numKeys() != 0)
+			{
+				player->addKey(1);
+			}
 			d->getRoom()->clearKeys();
 		}
 	}
+	player->addKey(keys.size());
 	keys.clear();
 }
 
@@ -922,6 +996,9 @@ void LevelScene::clearLevel() {
 
 	for (Door* d : doors) { if (d) delete d; }
 	doors.clear();
+
+	for (Entity* a : activeEffects) { if (a) delete a; }
+	activeEffects.clear();
 
 	// 2. HANDLE SINGLETON POINTERS (Except Player)
 	// We don't delete 'player' here because it's managed by Game/init logic
@@ -955,4 +1032,24 @@ void LevelScene::clearLevel() {
 		delete backgroundSprite;
 		backgroundSprite = nullptr;
 	}
+
+	if (keyIcon != nullptr) {
+		delete keyIcon;
+		keyIcon = nullptr; // Crucial: prevents double-deletion
+	}
+	if (bubbleIcon != nullptr) {
+		delete bubbleIcon;
+		bubbleIcon = nullptr;
+	}
+	if (bombIcon != nullptr) {
+		delete bombIcon;
+		bombIcon = nullptr;
+	}
+	if (numberSprite != nullptr) {
+		delete numberSprite;
+		numberSprite = nullptr;
+	}
+
+	// Set to nullptr to be safe
+	keyIcon = bubbleIcon = bombIcon = numberSprite = nullptr;
 }

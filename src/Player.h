@@ -38,9 +38,15 @@ public:
 	bool isInvincible() const { return invincibilityTimer > 0.f; }
 	static const float HURT_DURATION;         // 625ms = 5 frames @ 8fps
 	static const float INVINCIBILITY_DURATION;
+
 	void startDoorEnterAnimation();
 	void addBullet() { ++bullets; };
 	void addBomb() { ++bombs; };
+	void addKey(int numOfKeys) { keys += numOfKeys; };
+
+	int getKeyCount() const { return keys; }
+	int getBulletCount() const { return bullets; }
+	int getBombCount() const { return bombs; }
 
 	void playerEvent(LevelScene* levelScene, int deltaTime);
 private:
@@ -72,7 +78,7 @@ private:
 	Texture heartTexture;
 	Sprite* heartSprites[3];
 
-	int bullets, bombs;
+	int bullets, bombs, keys;
 	int actionTimer;
 
 	bool godMode = false;
@@ -84,6 +90,9 @@ private:
 
 	static const float GOD_ACTIVATE_DURATION; // ms que dura la animación de activación
 	static const int   HOVER_PIXELS;          // píxeles de levitación visual
+
+	float walkStepTimer = 0.0f;
+	const float STEP_INTERVAL = 650.0f;
 };
 
 #endif // _PLAYER_INCLUDE

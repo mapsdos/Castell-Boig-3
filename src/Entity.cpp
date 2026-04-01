@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include <iostream>
 
 Entity::~Entity() {
     if (sprite != nullptr) delete sprite;

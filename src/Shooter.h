@@ -22,7 +22,7 @@ public:
 
 	void Shoot(int deltaTime, ShaderProgram& program);
 	std::vector<Bullet*>& getBullets() { return bullets; }
-	const std::vector<Bullet*>& getBullets() const { return bullets; }
+	const std::vector<Bullet*>& getBullets() const { return bullets; };
 
 private:
 	void updateAnimation();
@@ -31,8 +31,6 @@ private:
 	int shotTimer = 2000;
 	bool isShooting = false;
 	int shootAnimTimer = 0;
-	int spriteWidth = 28;
-	int spriteHeight = 62;
 	std::vector<Bullet*> bullets;
 };
 

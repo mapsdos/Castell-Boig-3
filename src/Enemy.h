@@ -15,6 +15,9 @@ public:
     void setTileMap(TileMap* tileMap) { map = tileMap; }
     void updateFSM(const glm::vec2& playerPos, std::vector<PathStep> pathSequence);
 
+    int getHeight() { return spriteHeight; };
+    int getWidth() { return spriteWidth; };
+
 protected:
     TileMap* map;
     EnemyState currentState = EnemyState::EXPLORE;
@@ -22,6 +25,8 @@ protected:
     float MAX_VEL = 0.1f;
     float detectionRange = 1500.0f;
     bool moveRight = false;
+    int spriteWidth;
+    int spriteHeight;
 };
 
 #endif

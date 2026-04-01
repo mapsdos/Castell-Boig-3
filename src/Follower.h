@@ -18,6 +18,7 @@ public:
 	void update(int deltaTime) override;
 	void update(int deltaTime, const glm::vec2& playerPos, const std::vector<Weight*> weights);
 	void followPath(int deltaTime);
+
 private:
 
 	void handleMove(PathStep& step, glm::vec2 dir, float len, int dt);
@@ -31,8 +32,6 @@ private:
 	int timer;
 	bool isClimbing = false;
 	bool lastMoveRight = true;
-	int spriteWidth = 16;
-	int spriteHeight = 20;
 	std::vector<PathStep> pathSequence;
 };
 
