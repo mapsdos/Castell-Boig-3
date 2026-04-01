@@ -109,7 +109,7 @@ void Player::init(const glm::ivec2& tileMapPos, ShaderProgram& shaderProgram)
 	float frameWidthUV = 1.0f / numFrames;
 	float frameHeightUV = 1.0f;
 
-	bullets = bombs = actionTimer = 0;
+	bullets = bombs = keys =  actionTimer = 0;
 
 	bFloating = false;
 	spritesheet.loadFromFile("assets/images/sprites bob.png", TEXTURE_PIXEL_FORMAT_RGBA);
@@ -532,6 +532,7 @@ void Player::playerEvent(LevelScene* levelScene, int deltaTime)
 				Bomb* bomb = new Bomb();
 				glm::vec2 spawnPos = glm::vec2(posPlayer.x + 32, posPlayer.y + 16);
 				bomb->init(spawnPos, *program);
+				bomb->planted();
 
 				// Adding it to the vector makes it "exist" for the update and render loops
 				levelScene->addBomb(bomb);

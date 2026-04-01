@@ -91,6 +91,9 @@ private:
 	Sprite* backgroundSprite = nullptr;
 
 	bool firstCall = true;
+
+	Texture keyHudTex, bubbleHudTex, bombHudTex, numbersTex;
+	Sprite* keyIcon, * bubbleIcon, * bombIcon, * numberSprite = nullptr;
 };
 
 #endif

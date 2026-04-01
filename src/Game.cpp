@@ -33,6 +33,7 @@ void Game::init()
 	state = MAIN_MENU;
 
 	menuScene = new MenuScene();
+	creditsScene = new CreditsScene();
 	menuScene->init();
 
 	//creditsScene = new CreditsScene();

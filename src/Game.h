@@ -5,6 +5,7 @@
 #include "GraphicsConfig.h"
 #include "Scene.h"
 #include "MenuScene.h"
+#include "CreditsScene.h"
 #include "LevelScene.h"
 
 
@@ -62,7 +63,7 @@ private:
 	Scene* currentScene;
 	MenuScene* menuScene;
 	Scene* instructionsScene;
-	Scene* creditsScene;
+	CreditsScene* creditsScene;
 	LevelScene* level1Scene;
 	LevelScene* level2Scene;
 	LevelScene* level3Scene;
