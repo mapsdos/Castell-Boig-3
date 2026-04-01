@@ -6,6 +6,7 @@
 #include "Scene.h"
 #include "MenuScene.h"
 #include "CreditsScene.h"
+#include "InstructionsScene.h"
 #include "LevelScene.h"
 
 

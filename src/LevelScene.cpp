@@ -204,6 +204,7 @@ void LevelScene::init()
 				Clock* newClock = new Clock();
 				newClock->init(glm::vec2(x, y), texProgram);
 				items.push_back(newClock);
+				break;
 			}
 			case 11:
 			{

@@ -34,6 +34,7 @@ void Game::init()
 
 	menuScene = new MenuScene();
 	creditsScene = new CreditsScene();
+	instructionsScene = new InstructionScene();
 	menuScene->init();
 
 	//creditsScene = new CreditsScene();
@@ -151,6 +152,8 @@ void Game::changeState(GameState newState)
 	case CREDITS:
 		currentScene = creditsScene;
 		break;
+	case INSTRUCTIONS:
+		currentScene = instructionsScene;
 	}
 	currentScene->init();
 }
