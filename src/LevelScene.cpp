@@ -904,9 +904,9 @@ void LevelScene::render()
 		numberSprite->render(identity);
 		};
 
-	drawHUDItem(keyIcon, player->getKeyCount(), 580.f, 10.f);
-	drawHUDItem(bubbleIcon, player->getBulletCount(), 580.f, 30.f);
-	drawHUDItem(bombIcon, player->getBombCount(), 580.f, 50.f);
+	drawHUDItem(keyIcon, player->getKeyCount(), 580.f, 30.f);
+	drawHUDItem(bubbleIcon, player->getBulletCount(), 580.f, 50.f);
+	drawHUDItem(bombIcon, player->getBombCount(), 580.f, 70.f);
 
 	// --- 4. OVERLAYS (Death, Fades) ---
 	if (fadingOut || youDied || youDiedFading)
