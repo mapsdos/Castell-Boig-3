@@ -219,7 +219,7 @@ void Shooter::update(int deltaTime, const std::vector<Weight*> weights)
 
     // Hitbox for Squidward (28x62)
     float pL = position.x + tileMapDispl.x;
-    float pR = pL + spriteWidth + 2;
+    float pR = pL + spriteWidth + 4;
     float pT = position.y + tileMapDispl.y;
     float pB = pT + spriteHeight + tileMapDispl.y;
 
