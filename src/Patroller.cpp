@@ -156,14 +156,11 @@ void Patroller::update(int deltaTime, const std::vector<Weight*> weights)
     float pT = position.y + tileMapDispl.y;
     float pB = pT + spriteHeight + tileMapDispl.y;
 
-    cout << '\n' << pL << ' ' << pR << ' ' << pT << ' ' << pB << "Here" << '\n';
-
     for (Weight* w : weights) {
         float wL = w->getPosition().x;
         float wR = wL + 16;
         float wT = w->getPosition().y;
         float wB = wT + 16;
-        cout << wL << ' ' << wR << ' ' << wT << ' ' << wB << '\n';
 
         if (pB > wT && pT < wB) {
             if (moveRight) {
