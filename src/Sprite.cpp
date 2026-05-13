@@ -1,9 +1,8 @@
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include "GraphicsConfig.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "Sprite.h"
 
-
+//quadSize és es tamany en píxels de sa imatge, sizeInSpritesheet és com divideixes sa imatge
 Sprite *Sprite::createSprite(const glm::vec2 &quadSize, const glm::vec2 &sizeInSpritesheet, Texture *spritesheet, ShaderProgram *program)
 {
 	Sprite *quad = new Sprite(quadSize, sizeInSpritesheet, spritesheet, program);
@@ -32,6 +31,7 @@ Sprite::Sprite(const glm::vec2 &quadSize, const glm::vec2 &sizeInSpritesheet, Te
 	shaderProgram = program;
 	currentAnimation = -1;
 	position = glm::vec2(0.f);
+	size = quadSize;
 }
 
 Sprite::~Sprite()
@@ -44,20 +44,27 @@ void Sprite::update(int deltaTime)
 {
 	if(currentAnimation >= 0)
 	{
+		if (animations[currentAnimation].millisecsPerKeyframe <= 0.0f) {
+			currentKeyframe = 0;
+			texCoordDispl = animations[currentAnimation].keyframeDispl[0];
+			return;
+		}
 		timeAnimation += deltaTime;
 		while(timeAnimation > animations[currentAnimation].millisecsPerKeyframe)
 		{
 			timeAnimation -= animations[currentAnimation].millisecsPerKeyframe;
 			currentKeyframe = (currentKeyframe + 1) % animations[currentAnimation].keyframeDispl.size();
-		}
+		}	
 		texCoordDispl = animations[currentAnimation].keyframeDispl[currentKeyframe];
 	}
 }
 
-void Sprite::render() const
+void Sprite::render(const glm::mat4 &modelview) const
 {
-	glm::mat4 modelview = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, 0.f));
-	shaderProgram->setUniformMatrix4f("modelview", modelview);
+	glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, 0.f));
+	glm::mat4 modelViewSprite = modelview * modelMatrix;
+
+	shaderProgram->setUniformMatrix4f("modelview", modelViewSprite);
 	shaderProgram->setUniform2f("texCoordDispl", texCoordDispl.x, texCoordDispl.y);
 	glEnable(GL_TEXTURE_2D);
 	texture->use();
@@ -102,6 +109,17 @@ void Sprite::changeAnimation(int animId)
 	}
 }
 
+void Sprite::setFrame(int animId, int keyframeIdx)
+{
+	if(animId < int(animations.size()) && keyframeIdx < int(animations[animId].keyframeDispl.size()))
+	{
+		currentAnimation = animId;
+		currentKeyframe = keyframeIdx;
+		timeAnimation = 0.f;
+		texCoordDispl = animations[animId].keyframeDispl[keyframeIdx];
+	}
+}
+
 int Sprite::animation() const
 {
 	return currentAnimation;
@@ -112,5 +130,14 @@ void Sprite::setPosition(const glm::vec2 &pos)
 	position = pos;
 }
 
+glm::vec2 Sprite::getPosition() const
+{
+	return position;
+}
+
+glm::vec2 Sprite::getSize() const
+{
+	return size;
+}
 
 

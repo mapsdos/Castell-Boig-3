@@ -5,6 +5,34 @@
 #include <glm/glm.hpp>
 #include "Texture.h"
 #include "ShaderProgram.h"
+#include <map>
+
+enum TileType {
+	EMPTY = 0,
+	WALL = 1,
+	WEIGHT = 2,
+	VINES = 3,
+	DOOR = 4,
+	KEY = 5,
+	JUMP = 6,
+	BUBBLEGUN = 7,
+	BOMB = 8,
+	STOP_TIME = 9,
+	KEY_DOOR = 10,
+	PATROLLER = 11,
+	SHOOTER = 12,
+	FOLLOWER = 13
+};
+
+enum class AICommand { MOVE_LEFT, MOVE_RIGHT, CLIMB_UP, CLIMB_DOWN, FALL, TRANSPORT , ASCEND, FALL_RIGHT, FALL_LEFT};
+
+class Weight;
+
+struct PathStep {
+	AICommand command;
+	float distance; // How many pixels to travel for this specific command
+	glm::vec2 targetPoint; // The final destination of this step for snapping
+};
 
 
 // Class Tilemap is capable of loading a tile map from a text file in a very
@@ -28,17 +56,31 @@ public:
 	void render() const;
 	void free();
 	
-	int getTileSize() const { return tileSize; }
+	int getTileSize() const;
 
 	bool collisionMoveLeft(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveRight(const glm::ivec2 &pos, const glm::ivec2 &size) const;
 	bool collisionMoveDown(const glm::ivec2 &pos, const glm::ivec2 &size, int *posY) const;
+	bool collisionMoveUp(const glm::ivec2& pos, const glm::ivec2& size, int* posY) const;
+
+	int getTileIdAt(const glm::ivec2& pos) const;
+
+	glm::ivec2 getMapSize() const;
+
+	std::map<char, std::vector<glm::vec2>> const & getPositionsOfStairs() const;
+
+	vector<string> const & getRoomFiles() const;
+
+	std::vector<PathStep> getPath(glm::vec2 posE, glm::vec2 posP, std::vector<Weight*> weights);
+
+	bool hasFloorAt(const glm::ivec2& pixelPos) const;
+
+	void setMapTile(const glm::ivec2& pos);
+
+	string getBackgroundPath() { return backgroundPath; };
 	
 private:
-	bool loadLevel(const string &
-	
-	
-	);
+	bool loadLevel(const string &);
 	void prepareArrays(const glm::vec2 &minCoords, ShaderProgram &program);
 
 private:
@@ -51,7 +93,10 @@ private:
 	Texture tilesheet;
 	glm::vec2 tileTexSize;
 	int *map;
-
+	TileType tileType;
+	std::map<char, std::vector<glm::vec2>> positions;
+	std::vector<string> roomFiles;
+	string backgroundPath;
 };
 
 

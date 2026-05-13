@@ -1,77 +1,81 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\",
+  "WorkspaceRootPath": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\TileMap.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\SFX.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:SFX.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\TileMap.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:TileMap.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Scene.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Scene.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Scene.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\TileMap.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\TileMap.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:TileMap.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Texture.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Texture.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Texture.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Player.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Player.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Player.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Texture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Texture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Texture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Sprite.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Sprite.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Sprite.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Sprite.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Sprite.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Sprite.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\ShaderProgram.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\ShaderProgram.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ShaderProgram.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\ShaderProgram.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\ShaderProgram.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ShaderProgram.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Shader.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Shader.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Shader.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Shader.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Shader.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Shader.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Scene.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Scene.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Scene.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Player.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Player.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Player.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Game.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Game.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Game.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Game.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Game.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Game.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\AnimKeyframes.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\AnimKeyframes.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:AnimKeyframes.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
@@ -82,12 +86,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
-            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{c6f34f0d-7ae5-4f3a-be61-fe0c21ae9eb8}"
@@ -95,23 +95,36 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "SFX.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\SFX.h",
+              "RelativeDocumentMoniker": "SFX.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\SFX.h",
+              "RelativeToolTip": "SFX.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADsAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-03-06T15:20:03.936Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "TileMap.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\TileMap.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\TileMap.h",
               "RelativeDocumentMoniker": "TileMap.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\TileMap.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\TileMap.h",
               "RelativeToolTip": "TileMap.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAD4vwkAAAAZAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAD4vwkAAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-02-16T04:20:10.94Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "TileMap.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\TileMap.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\TileMap.cpp",
               "RelativeDocumentMoniker": "TileMap.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\TileMap.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\TileMap.cpp",
               "RelativeToolTip": "TileMap.cpp",
               "ViewState": "AgIAAAgAAAAAAAAAAAD4vw8AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -119,11 +132,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Texture.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Texture.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Texture.h",
               "RelativeDocumentMoniker": "Texture.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Texture.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Texture.h",
               "RelativeToolTip": "Texture.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
@@ -131,11 +144,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "Texture.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Texture.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Texture.cpp",
               "RelativeDocumentMoniker": "Texture.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Texture.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Texture.cpp",
               "RelativeToolTip": "Texture.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -143,11 +156,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "Sprite.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Sprite.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Sprite.h",
               "RelativeDocumentMoniker": "Sprite.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Sprite.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Sprite.h",
               "RelativeToolTip": "Sprite.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
@@ -155,11 +168,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "Sprite.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Sprite.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Sprite.cpp",
               "RelativeDocumentMoniker": "Sprite.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Sprite.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Sprite.cpp",
               "RelativeToolTip": "Sprite.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -167,11 +180,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "Player.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Player.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Player.cpp",
               "RelativeDocumentMoniker": "Player.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Player.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Player.cpp",
               "RelativeToolTip": "Player.cpp",
               "ViewState": "AgIAABcAAAAAAAAAAAD4vyEAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -179,24 +192,23 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "Scene.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Scene.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Scene.cpp",
               "RelativeDocumentMoniker": "Scene.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Scene.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Scene.cpp",
               "RelativeToolTip": "Scene.cpp",
               "ViewState": "AgIAABUAAAAAAAAAAAAAACEAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-02-16T04:20:00.254Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-16T04:20:00.254Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "ShaderProgram.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\ShaderProgram.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\ShaderProgram.h",
               "RelativeDocumentMoniker": "ShaderProgram.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\ShaderProgram.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\ShaderProgram.h",
               "RelativeToolTip": "ShaderProgram.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
@@ -204,11 +216,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "ShaderProgram.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\ShaderProgram.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\ShaderProgram.cpp",
               "RelativeDocumentMoniker": "ShaderProgram.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\ShaderProgram.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\ShaderProgram.cpp",
               "RelativeToolTip": "ShaderProgram.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -216,11 +228,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "Shader.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Shader.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Shader.cpp",
               "RelativeDocumentMoniker": "Shader.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Shader.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Shader.cpp",
               "RelativeToolTip": "Shader.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -228,11 +240,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "Shader.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Shader.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Shader.h",
               "RelativeDocumentMoniker": "Shader.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Shader.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Shader.h",
               "RelativeToolTip": "Shader.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
@@ -240,11 +252,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "Scene.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Scene.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Scene.h",
               "RelativeDocumentMoniker": "Scene.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Scene.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Scene.h",
               "RelativeToolTip": "Scene.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
@@ -252,11 +264,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "Player.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Player.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Player.h",
               "RelativeDocumentMoniker": "Player.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Player.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Player.h",
               "RelativeToolTip": "Player.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
@@ -264,11 +276,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "main.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\main.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\main.cpp",
               "RelativeDocumentMoniker": "main.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\main.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\main.cpp",
               "RelativeToolTip": "main.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -276,11 +288,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "Game.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Game.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Game.h",
               "RelativeDocumentMoniker": "Game.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Game.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Game.h",
               "RelativeToolTip": "Game.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
@@ -288,11 +300,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "Game.cpp",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Game.cpp",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Game.cpp",
               "RelativeDocumentMoniker": "Game.cpp",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\Game.cpp",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\Game.cpp",
               "RelativeToolTip": "Game.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
@@ -300,15 +312,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "AnimKeyframes.h",
-              "DocumentMoniker": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\AnimKeyframes.h",
+              "DocumentMoniker": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\AnimKeyframes.h",
               "RelativeDocumentMoniker": "AnimKeyframes.h",
-              "ToolTip": "C:\\Users\\arnau\\Downloads\\Castell Boig 3\\src\\AnimKeyframes.h",
+              "ToolTip": "C:\\Users\\arnau\\source\\repos\\mapsdos\\Castell-Boig-3\\src\\AnimKeyframes.h",
               "RelativeToolTip": "AnimKeyframes.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-02-16T04:19:52.435Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
             }
           ]
         }
